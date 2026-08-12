@@ -1,56 +1,16 @@
 const steps = [
-  ['WhatsApp received', 'Twilio · inbound', 'wa', 'complete'],
-  ['Understand request', 'GPT-4o mini · 0.93 confidence', 'ai', 'complete'],
-  ['Route conversation', 'Intent: booking', 'route', 'complete'],
-  ['Call customer', 'Vapi · outbound', 'call', 'complete'],
-  ['Sync reservation', 'HubSpot · deal update', 'sync', 'retry'],
-  ['Confirm by message', 'Twilio · WhatsApp reply', 'send', 'active'],
+  ['WhatsApp received', 'Twilio · inbound', 'wa'], ['Understand request', 'GPT-4o mini · analysing intent', 'ai'], ['Route conversation', 'Intent: booking', 'route'], ['Call customer', 'Vapi · outbound', 'call'], ['Sync reservation', 'HubSpot · deal update', 'sync'], ['Confirm by message', 'Twilio · WhatsApp reply', 'send'],
 ];
-
-function icon(type) {
-  const icons = { wa:'◔', ai:'✦', route:'⌘', call:'⌕', sync:'▣', send:'↗' };
-  return `<span class="step-icon ${type}">${icons[type]}</span>`;
-}
-
-document.querySelector('#app').innerHTML = `
-  <main>
-    <nav class="topbar">
-      <a class="brand" href="#"><span class="brand-mark">S</span>signalflow</a>
-      <div class="crumb"><span>Operations</span><b>/</b><span>Automations</span><b>/</b><strong>Execution #2231</strong></div>
-      <div class="nav-actions"><button class="ghost">⌘ K</button><button class="avatar">AM</button></div>
-    </nav>
-    <section class="page-head">
-      <div class="back">← &nbsp;All executions</div>
-      <div class="head-row">
-        <div><div class="eyebrow">PRODUCTION · COMPLETED 2 MIN AGO</div><h1>Appointment booking <span class="status">● Successful</span></h1><p>WhatsApp intake → voice agent → CRM confirmation</p></div>
-        <div class="head-actions"><button class="secondary">↗ Share</button><button class="primary" id="rerun">↻ Run again</button></div>
-      </div>
-    </section>
-    <section class="metrics">
-      <div><label>RUN TIME</label><strong>6.4<span>s</span></strong><small>Fastest 15% this week</small></div>
-      <div><label>STEPS COMPLETED</label><strong>6<span>/6</span></strong><small class="green">No dropped events</small></div>
-      <div><label>RETRIES</label><strong class="purple">1</strong><small>CRM request recovered</small></div>
-      <div><label>HUMAN HANDOFF</label><strong class="green">0<span> min</span></strong><small>Fully automated</small></div>
-    </section>
-    <section class="content-grid">
-      <div class="panel journey">
-        <div class="panel-head"><div><h2>Execution journey</h2><p>6 steps completed successfully</p></div><button class="view-toggle">⌁ &nbsp;Timeline</button></div>
-        <div class="timeline">
-          ${steps.map((s,i) => `<article class="step ${s[3]}" style="--i:${i}"><div class="rail">${icon(s[2])}</div><div class="step-content"><div><h3>${s[0]} ${s[3] === 'retry' ? '<span class="badge retry-badge">Recovered after retry</span>' : s[3] === 'active' ? '<span class="badge sent-badge">Sent</span>' : ''}</h3><p>${s[1]}</p></div><div class="time">${['02:09:31','02:09:32','02:09:33','02:09:37','02:09:43','02:09:44'][i]}<span>${i === 4 ? '1.9s' : i === 3 ? '4.0s' : '0.2s'}</span></div></div></article>`).join('')}
-        </div>
-      </div>
-      <aside class="right-col">
-        <section class="panel outcome"><div class="spark">✦</div><div class="eyebrow">FINAL OUTCOME</div><h2>Booking confirmed</h2><p>Thursday, 2:00 PM</p><hr><div class="person"><span>AA</span><div><strong>Alex Adebayo</strong><small>+234 802 555 0118</small></div><button>↗</button></div></section>
-        <section class="panel recent"><div class="panel-head"><div><h2>Recent runs</h2><p>Same workflow · last 24h</p></div><button>View all</button></div>
-          <div class="run"><i class="dot green-dot"></i><span>Appointment booking</span><small>now</small></div>
-          <div class="run"><i class="dot"></i><span>CRM update</span><small>2m</small></div>
-          <div class="run"><i class="dot purple-dot"></i><span>Voice booking</span><small>14m</small></div>
-        </section>
-      </aside>
-    </section>
-    <section class="panel activity"><div class="panel-head"><div><h2>Activity log</h2><p>Detailed event history</p></div><button class="filter">⌄ All events</button></div>
-      <div class="logs"><p><time>02:09:31.028</time><b class="tag blue">VAPI</b> Call connected. <em>Agent: Nora</em></p><p><time>02:09:43.534</time><b class="tag red">CRM</b> Deal update timed out after 8000ms</p><p><time>02:09:51.922</time><b class="tag purpletag">RETRY</b> Retry 2/3 · backoff 1.2s</p><p><time>02:09:56.432</time><b class="tag green-tag">DONE</b> Reservation marked confirmed in HubSpot</p></div>
-    </section>
-  </main>`;
-
-document.querySelector('#rerun').addEventListener('click', e => { e.currentTarget.textContent = '✓ Queued'; e.currentTarget.classList.add('queued'); setTimeout(() => { e.currentTarget.textContent = '↻ Run again'; e.currentTarget.classList.remove('queued') }, 1800) });
+const events = [
+  ['TWILIO','green-tag','Inbound WhatsApp received from Alex Adebayo'], ['AI','blue','Intent classified as booking · 0.93 confidence'], ['ROUTER','blue','Booking workflow selected'], ['VAPI','blue','Call connected. Agent: Nora'], ['CRM','red','Deal update timed out after 8000ms'], ['RETRY','purpletag','Retry 2/3 · backoff 1.2s'], ['DONE','green-tag','Reservation marked confirmed in HubSpot'], ['TWILIO','green-tag','Booking confirmation delivered on WhatsApp'],
+];
+const glyph = {wa:'◔',ai:'✦',route:'⌘',call:'⌕',sync:'▣',send:'↗'};
+const stepMarkup = (s,i) => `<article class="step pending" data-step="${i}"><div class="rail"><span class="step-icon ${s[2]}">${glyph[s[2]]}</span></div><div class="step-content"><div><h3>${s[0]} <span class="step-badge"></span></h3><p>${s[1]}</p></div><div class="time"><span class="step-time">Waiting</span><span class="step-duration">—</span></div></div></article>`;
+document.querySelector('#app').innerHTML = `<main><nav class="topbar"><a class="brand"><span class="brand-mark">S</span>signalflow</a><div class="crumb"><span>Operations</span><b>/</b><span>Automations</span><b>/</b><strong id="execution-name">Execution #2231</strong></div><div class="nav-actions"><button class="ghost">⌘ K</button><button class="avatar">AM</button></div></nav><section class="page-head"><div class="back">← &nbsp;All executions</div><div class="head-row"><div><div class="eyebrow" id="run-state">PRODUCTION · COMPLETED 2 MIN AGO</div><h1>Appointment booking <span class="status" id="status">● Successful</span></h1><p>WhatsApp intake → voice agent → CRM confirmation</p></div><div class="head-actions"><button class="secondary">↗ Share</button><button class="primary" id="rerun">▶ Run workflow</button></div></div></section><section class="metrics"><div><label>RUN TIME</label><strong id="runtime">6.4<span>s</span></strong><small id="runtime-note">Fastest 15% this week</small></div><div><label>STEPS COMPLETED</label><strong id="step-count">6<span>/6</span></strong><small class="green">No dropped events</small></div><div><label>RETRIES</label><strong class="purple" id="retries">1</strong><small>CRM request recovered</small></div><div><label>HUMAN HANDOFF</label><strong class="green">0<span> min</span></strong><small>Fully automated</small></div></section><section class="content-grid"><div class="panel journey"><div class="panel-head"><div><h2>Execution journey</h2><p id="journey-copy">6 steps completed successfully</p></div><button class="view-toggle">⌁ &nbsp;Live timeline</button></div><div class="timeline" id="timeline">${steps.map(stepMarkup).join('')}</div></div><aside class="right-col"><section class="panel outcome"><div class="spark">✦</div><div class="eyebrow">FINAL OUTCOME</div><h2 id="outcome-title">Booking confirmed</h2><p id="outcome-copy">Thursday, 2:00 PM</p><hr><div class="person"><span>AA</span><div><strong>Alex Adebayo</strong><small>+234 802 555 0118</small></div><button>↗</button></div></section><section class="panel recent"><div class="panel-head"><div><h2>Recent runs</h2><p>Same workflow · last 24h</p></div><button>View all</button></div><div id="recent-runs"><div class="run"><i class="dot green-dot"></i><span>Appointment booking</span><small>2m</small></div><div class="run"><i class="dot"></i><span>CRM update</span><small>8m</small></div><div class="run"><i class="dot purple-dot"></i><span>Voice booking</span><small>14m</small></div></div></section></aside></section><section class="panel activity"><div class="panel-head"><div><h2>Activity log <span class="live-pill" id="live-pill">ARCHIVED</span></h2><p id="log-copy">Detailed event history</p></div><button class="filter">⌄ All events</button></div><div class="logs" id="logs"></div></section></main>`;
+const $ = s => document.querySelector(s); let running=false;
+const now=()=>new Date().toLocaleTimeString('en-GB',{hour12:false})+'.'+String(Math.floor(performance.now()%1000)).padStart(3,'0');
+function addLog([tag,kind,text]){const p=document.createElement('p');p.className='log-new';p.innerHTML=`<time>${now()}</time><b class="tag ${kind}">${tag}</b> ${text}`;$('#logs').prepend(p)}
+function setStep(i,state,duration=''){const el=$(`[data-step="${i}"]`), badge=el.querySelector('.step-badge');el.className=`step ${state}`;el.querySelector('.step-time').textContent=state==='running'?'Running now':new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});el.querySelector('.step-duration').textContent=state==='running'?'processing':duration||'0.3s';badge.textContent=state==='running'?'In progress':state==='retry'?'Recovered after retry':state==='complete'?'Completed':''}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function startRun(){if(running)return;running=true;const button=$('#rerun'), started=performance.now(), runId=Math.floor(2200+Math.random()*600);button.disabled=true;button.textContent='● Running';button.classList.add('queued');$('#execution-name').textContent=`Execution #${runId}`;$('#run-state').textContent='PRODUCTION · RUNNING NOW';$('#status').textContent='● In progress';$('#status').classList.add('running-status');$('#runtime').innerHTML='0.0<span>s</span>';$('#step-count').innerHTML='0<span>/6</span>';$('#retries').textContent='0';$('#journey-copy').textContent='Preparing a new execution…';$('#outcome-title').textContent='Workflow running';$('#outcome-copy').textContent='Listening for a WhatsApp request';$('#live-pill').textContent='LIVE';$('#live-pill').classList.add('is-live');$('#log-copy').textContent='Streaming events from this execution';$('#logs').innerHTML='';document.querySelectorAll('.step').forEach((_,i)=>setStep(i,'pending'));const recent=document.createElement('div');recent.className='run run-live';recent.innerHTML='<i class="dot live-dot"></i><span>Appointment booking</span><small>running</small>';$('#recent-runs').prepend(recent);for(let i=0;i<steps.length;i++){setStep(i,'running');addLog(events[i]);await wait(i===3?1200:650);if(i===4){setStep(i,'retry','1.2s');addLog(events[5]);await wait(700)}setStep(i,'complete',i===3?'1.2s':i===4?'1.9s':'0.3s');$('#step-count').innerHTML=`${i+1}<span>/6</span>`;$('#runtime').innerHTML=`${((performance.now()-started)/1000).toFixed(1)}<span>s</span>`}addLog(events[7]);const secs=((performance.now()-started)/1000).toFixed(1);$('#run-state').textContent='PRODUCTION · COMPLETED JUST NOW';$('#status').textContent='● Successful';$('#status').classList.remove('running-status');$('#runtime').innerHTML=`${secs}<span>s</span>`;$('#retries').textContent='1';$('#journey-copy').textContent='6 steps completed successfully';$('#outcome-title').textContent='Booking confirmed';$('#outcome-copy').textContent='Thursday, 2:00 PM';$('#live-pill').textContent='COMPLETE';$('#live-pill').classList.remove('is-live');recent.classList.remove('run-live');recent.querySelector('.dot').className='dot green-dot';recent.querySelector('small').textContent='now';button.disabled=false;button.textContent='▶ Run workflow';button.classList.remove('queued');running=false}
+[['VAPI','blue','Call connected. Agent: Nora'],['CRM','red','Deal update timed out after 8000ms'],['RETRY','purpletag','Retry 2/3 · backoff 1.2s'],['DONE','green-tag','Reservation marked confirmed in HubSpot']].reverse().forEach(addLog);document.querySelectorAll('.step').forEach((_,i)=>setStep(i,i===4?'retry':'complete',i===3?'4.0s':i===4?'1.9s':'0.2s'));$('#rerun').addEventListener('click',startRun);
