@@ -1,5 +1,3 @@
-import './style.css';
-
 const steps = [
   ['WhatsApp received', 'Twilio · inbound', 'wa', 'complete'],
   ['Understand request', 'GPT-4o mini · 0.93 confidence', 'ai', 'complete'],
