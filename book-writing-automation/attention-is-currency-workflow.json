@@ -1,0 +1,402 @@
+{
+  "name": "Attention is Currency - Book Writing Automation",
+  "description": "Production-ready automated workflow for writing 'Attention is Currency' book. Uses ChatGPT for strategic planning, Google Gemini for research and primary writing, and Claude for professional editing.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "google-sheets:watchRows",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": "{{connection}}"
+      },
+      "mapper": {
+        "spreadsheetId": "{{spreadsheetId}}",
+        "tableId": "Chapter Input",
+        "return": [
+          {
+            "key": "chapterNumber",
+            "label": "Chapter Number",
+            "type": "text"
+          },
+          {
+            "key": "chapterTitle",
+            "label": "Chapter Title",
+            "type": "text"
+          },
+          {
+            "key": "objectives",
+            "label": "Objectives",
+            "type": "text"
+          },
+          {
+            "key": "totalChapters",
+            "label": "Total Chapters",
+            "type": "number"
+          },
+          {
+            "key": "notificationEmail",
+            "label": "Notification Email",
+            "type": "text"
+          },
+          {
+            "key": "spreadsheetId",
+            "label": "Spreadsheet ID",
+            "type": "text"
+          },
+          {
+            "key": "masterOutline",
+            "label": "Master Book Outline",
+            "type": "text"
+          },
+          {
+            "key": "researchNotes",
+            "label": "Research Notes / Sources Needed",
+            "type": "text"
+          },
+          {
+            "key": "toneInstructions",
+            "label": "Tone & Style Instructions",
+            "type": "text"
+          },
+          {
+            "key": "personalNotes",
+            "label": "Personal Notes / Vision",
+            "type": "text"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "notes": "MODULE 1: Google Sheets trigger - watches for new chapter rows in 'Chapter Input' sheet"
+      }
+    },
+    {
+      "id": 2,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": "{{connection}}"
+      },
+      "mapper": {
+        "spreadsheetId": "{{1.spreadsheetId}}",
+        "tableId": "Master Progress",
+        "row": {
+          "Chapter Number": "{{1.chapterNumber}}",
+          "Chapter Title": "{{1.chapterTitle}}",
+          "Objectives": "{{1.objectives}}",
+          "Status": "In Progress",
+          "Timestamp": "{{now}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "notes": "Log chapter start to Master Progress sheet"
+      }
+    },
+    {
+      "id": 3,
+      "module": "google-sheets:filterRows",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": "{{connection}}"
+      },
+      "mapper": {
+        "spreadsheetId": "{{1.spreadsheetId}}",
+        "tableId": "Context Library",
+        "filters": {
+          "Chapter Number": "{{sub(1.chapterNumber, 1)}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "notes": "MODULE 2: Fetch previous chapter context for consistency"
+      }
+    },
+    {
+      "id": 4,
+      "module": "openai-gpt-3:CreateCompletion",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": "{{openai_connection}}"
+      },
+      "mapper": {
+        "model": "gpt-4-turbo",
+        "temperature": 0.7,
+        "max_tokens": 3000,
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a strategic book architect for 'Attention is Currency' by Braxton Hartwell. Your role is to develop detailed chapter blueprints that guide the writer. You determine what needs to be said, identify missing ideas, organize the argument logically, develop compelling examples and questions, and provide clear instructions for the next AI writer. Focus on strategy, structure, and clarity—not on writing the chapter itself."
+          },
+          {
+            "role": "user",
+            "content": "BOOK VISION:\n{{1.masterOutline}}\n\nCHAPTER TO PLAN:\nNumber: {{1.chapterNumber}}\nTitle: {{1.chapterTitle}}\nObjectives: {{1.objectives}}\n\nAUTHOR'S PERSONAL NOTES:\n{{1.personalNotes}}\n\nRESEARCH PRIORITIES:\n{{1.researchNotes}}\n\nTONE & STYLE REQUIREMENTS:\n{{1.toneInstructions}}\n\nPREVIOUS CHAPTER CONTEXT:\nKey Concepts: {{3.rows[0].\"Key Concepts\" | default: \"First chapter—establish foundation\"}}\nTone/Style: {{3.rows[0].\"Tone/Style Markers\" | default: \"Philosophical, accessible, story-driven\"}}\n\nCREATE A STRATEGIC CHAPTER BLUEPRINT that includes:\n1. Central thesis or main argument\n2. Key questions to address\n3. 4-5 major sections with clear purposes\n4. Specific examples, stories, or analogies to research and include\n5. Connections to previous chapters\n6. Anticipated reader questions or objections\n7. Emotional arc and storytelling approach\n8. Clear instructions for the writer on tone, pacing, and style\n9. Target length: 4000-5000 words\n\nMake this blueprint detailed enough that the writer has a clear strategic roadmap."
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "notes": "MODULE 3: ChatGPT generates strategic chapter blueprint"
+      }
+    },
+    {
+      "id": 5,
+      "module": "gemini-ai:createACompletionGeminiPro",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": "{{gemini_connection}}"
+      },
+      "mapper": {
+        "temperature": 0.7,
+        "maxTokens": 8500,
+        "prompt": "You are writing Chapter {{1.chapterNumber}}: {{1.chapterTitle}} for 'Attention is Currency'\n\nSTRATEGIC BLUEPRINT FROM PLANNING:\n{{4.choices[0].message.content}}\n\nAUTHOR'S VISION:\n{{1.personalNotes}}\n\nRESEARCH FOCUS:\n{{1.researchNotes}}\n\nTONE & STYLE GUIDE:\n{{1.toneInstructions}}\nPrevious chapter style: {{3.rows[0].\"Tone/Style Markers\" | default: \"Philosophical, accessible, story-driven\"}}\n\nWRITING REQUIREMENTS:\n- Write conversationally and naturally—as if for intelligent ordinary people, not an academic essay\n- Use relatable stories, modern/historical examples, and practical applications\n- Include analogies and questions that engage the reader\n- Maintain emotional arc and pacing\n- Connect logically to previous chapters: {{3.rows[0].\"Key Concepts\" | default: \"Foundation concepts\"}}\n- Target 4000-5000 words\n- Research and incorporate real examples where the blueprint indicates\n- Focus on clarity and reader engagement over complexity\n\nWrite the complete first draft following the strategic blueprint. Do the heavy lifting on research and storytelling. Make it compelling, clear, and human-sounding."
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "notes": "MODULE 4: Google Gemini writes full first draft with research and storytelling"
+      }
+    },
+    {
+      "id": 6,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": "{{connection}}"
+      },
+      "mapper": {
+        "spreadsheetId": "{{1.spreadsheetId}}",
+        "tableId": "First Drafts",
+        "row": {
+          "Chapter Number": "{{1.chapterNumber}}",
+          "Gemini Draft": "{{5.text}}",
+          "Word Count": "{{divide(length(5.text), 4.5)}}",
+          "Timestamp": "{{now}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        },
+        "notes": "Store Gemini draft in First Drafts sheet"
+      }
+    },
+    {
+      "id": 7,
+      "module": "anthropic-claude:simpleTextPrompt",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": "{{claude_connection}}"
+      },
+      "mapper": {
+        "model": "claude-3-5-sonnet-20241022",
+        "maxTokens": 4500,
+        "temperature": 0.5,
+        "systemPrompt": "You are a professional editor for 'Attention is Currency'—a sophisticated, thought-provoking book for intelligent readers. Your job is to enhance the chapter's quality, not rewrite it. Focus on: natural human voice and conversational tone, storytelling quality and emotional impact, pacing and transitions, clarity and readability, consistency with previous chapters, eliminating repetition and weak passages. PRESERVE strong material—don't rewrite for the sake of rewriting. Make selective, meaningful improvements that maintain the author's ideas while elevating the presentation. Output: [SPECIFIC IMPROVEMENTS] with context, then [EDITED TEXT] for sections that need changes.",
+        "userPrompt": "Edit Chapter {{1.chapterNumber}}: {{1.chapterTitle}}\n\nDRAFT TEXT:\n{{5.text}}\n\nBOOK TONE & CONSISTENCY:\n{{1.toneInstructions}}\nPrevious chapters style: {{3.rows[0].\"Tone/Style Markers\" | default: \"Philosophical, accessible, story-driven\"}}\nPrevious key concepts: {{3.rows[0].\"Key Concepts\" | default: \"Foundation material\"}}\n\nFOCUS YOUR EDITING ON:\n1. Human voice—does it sound conversational and natural, not like an AI essay?\n2. Storytelling—are the examples, analogies, and stories compelling and relatable?\n3. Pacing—does the argument flow logically and maintain reader engagement?\n4. Transitions—do ideas connect smoothly from section to section?\n5. Clarity—is complex thinking made accessible?\n6. Consistency—does tone, style, and content align with previous chapters?\n7. Repetition—are concepts restated unnecessarily?\n8. Emotional resonance—does it engage readers intellectually and emotionally?\n\nPreserve Gemini's strong sections. Make only meaningful improvements. Output the edited version ready for publication."
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        },
+        "notes": "MODULE 5: Claude selectively edits with professional polish"
+      }
+    },
+    {
+      "id": 8,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": "{{connection}}"
+      },
+      "mapper": {
+        "spreadsheetId": "{{1.spreadsheetId}}",
+        "tableId": "Editorial Log",
+        "row": {
+          "Chapter Number": "{{1.chapterNumber}}",
+          "Editorial Notes": "{{7.text}}",
+          "Status": "Edited",
+          "Timestamp": "{{now}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 2100,
+          "y": 0
+        },
+        "notes": "Store editorial notes and improvements"
+      }
+    },
+    {
+      "id": 9,
+      "module": "code:ExecuteCode",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "code": "// Format the edited chapter text with header and metadata footer\nconst chapterNumber = {{1.chapterNumber}};\nconst chapterTitle = `{{1.chapterTitle}}`;\nconst editedText = `{{7.text}}`;\nconst wordCount = Math.round(editedText.length / 4.5);\nconst now = new Date();\nconst publishDate = now.toLocaleDateString();\n\nconst formattedChapter = `# Chapter ${chapterNumber}: ${chapterTitle}\\n\\n${editedText}\\n\\n---\\n*Word Count: ${wordCount} | Published: ${publishDate} | Status: Complete*`;\n\nreturn formattedChapter;"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2400,
+          "y": 0
+        },
+        "notes": "MODULE 6: Format chapter with header, body, and metadata footer"
+      }
+    },
+    {
+      "id": 10,
+      "module": "google-docs:createADocument",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": "{{google_connection}}"
+      },
+      "mapper": {
+        "name": "Chapter {{1.chapterNumber}}: {{1.chapterTitle}}",
+        "content": "{{9.result}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2700,
+          "y": 0
+        },
+        "notes": "MODULE 7: Create Google Doc with formatted chapter"
+      }
+    },
+    {
+      "id": 11,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": "{{connection}}"
+      },
+      "mapper": {
+        "spreadsheetId": "{{1.spreadsheetId}}",
+        "tableId": "Cost Tracking",
+        "row": {
+          "Chapter Number": "{{1.chapterNumber}}",
+          "ChatGPT Tokens": "{{4.usage.total_tokens | default: 0}}",
+          "Gemini Tokens": "{{5.usage.total_tokens | default: 0}}",
+          "Claude Tokens": "{{7.usage.output_tokens | default: 0}}",
+          "Total Chapter Cost": "{{add(divide(multiply(4.usage.total_tokens, 0.02), 1000), divide(multiply(5.usage.total_tokens, 0.075), 1000), divide(multiply(7.usage.output_tokens, 3), 1000000))}}",
+          "Status": "Complete",
+          "Timestamp": "{{now}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 3000,
+          "y": 0
+        },
+        "notes": "Track costs and metrics per chapter"
+      }
+    },
+    {
+      "id": 12,
+      "module": "google-sheets:addRow",
+      "version": 2,
+      "parameters": {
+        "__IMTCONN__": "{{connection}}"
+      },
+      "mapper": {
+        "spreadsheetId": "{{1.spreadsheetId}}",
+        "tableId": "Context Library",
+        "row": {
+          "Chapter Number": "{{1.chapterNumber}}",
+          "Key Concepts": "{{1.objectives}}",
+          "Tone/Style Markers": "Philosophical, accessible, story-driven",
+          "Characters": "{{7.text | match: /character|protagonist|introduced/gi | join: \", \" | default: \"\"}}",
+          "Plot Points": "{{7.text | match: /plot|event|happens|scene/gi | join: \", \" | default: \"\"}}"
+        }
+      },
+      "metadata": {
+        "designer": {
+          "x": 3300,
+          "y": 0
+        },
+        "notes": "Update Context Library for next chapter continuity"
+      }
+    },
+    {
+      "id": 13,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "mapper": null,
+      "metadata": {
+        "designer": {
+          "x": 3600,
+          "y": 0
+        },
+        "notes": "MODULE 8: Check if book is complete or continue to next chapter"
+      },
+      "routes": [
+        {
+          "condition": "{{equals(1.chapterNumber, 1.totalChapters)}}",
+          "flow": [
+            {
+              "id": 14,
+              "module": "google-email:sendAnEmail",
+              "version": 4,
+              "parameters": {
+                "__IMTCONN__": "{{email_connection}}"
+              },
+              "mapper": {
+                "to": "{{1.notificationEmail}}",
+                "subject": "✅ Book Complete: Attention is Currency - {{1.totalChapters}} Chapters Published",
+                "body": "Congratulations! Your book 'Attention is Currency' is now complete!\n\n📖 PROJECT SUMMARY:\n- Total Chapters: {{1.totalChapters}}\n- Book Status: PUBLISHED\n- All chapters are ready in Google Docs\n- Total Project Cost: Tracked in Cost Tracking sheet\n\n🎉 Your manuscript is ready for final review and publication.\n\nThank you for using the Attention is Currency Book Writing Automation system!"
+              },
+              "metadata": {
+                "designer": {
+                  "x": 3900,
+                  "y": 0
+                },
+                "notes": "Send completion email when all chapters are done"
+              }
+            }
+          ]
+        },
+        {
+          "condition": true,
+          "flow": [
+            {
+              "id": 15,
+              "module": "builtin:BasicRepeater",
+              "version": 1,
+              "mapper": {
+                "repeats": 1,
+                "interval": 3600
+              },
+              "metadata": {
+                "designer": {
+                  "x": 3900,
+                  "y": 0
+                },
+                "notes": "Wait for next chapter webhook (1 hour default interval)"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "version": 1,
+    "instant": false,
+    "notes": "Production-ready automated workflow for 'Attention is Currency' book. Uses ChatGPT (strategic planning), Google Gemini (research and primary writing), and Claude (professional editing). Triggered by Google Sheets, tracks progress and costs, publishes to Google Docs."
+  }
+}
