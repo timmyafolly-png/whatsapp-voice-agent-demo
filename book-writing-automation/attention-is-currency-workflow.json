@@ -1,6 +1,5 @@
 {
   "name": "Attention is Currency - Book Writing Automation",
-  "description": "Production-ready automated workflow for writing 'Attention is Currency' book. Uses ChatGPT for strategic planning, Google Gemini for research and primary writing, and Claude for professional editing.",
   "flow": [
     {
       "id": 1,
@@ -95,8 +94,7 @@
         "designer": {
           "x": 300,
           "y": 0
-        },
-        "notes": "Log chapter start to Master Progress sheet"
+        }
       }
     },
     {
@@ -117,8 +115,7 @@
         "designer": {
           "x": 600,
           "y": 0
-        },
-        "notes": "MODULE 2: Fetch previous chapter context for consistency"
+        }
       }
     },
     {
@@ -147,8 +144,7 @@
         "designer": {
           "x": 900,
           "y": 0
-        },
-        "notes": "MODULE 3: ChatGPT generates strategic chapter blueprint"
+        }
       }
     },
     {
@@ -167,8 +163,7 @@
         "designer": {
           "x": 1200,
           "y": 0
-        },
-        "notes": "MODULE 4: Google Gemini writes full first draft with research and storytelling"
+        }
       }
     },
     {
@@ -192,8 +187,7 @@
         "designer": {
           "x": 1500,
           "y": 0
-        },
-        "notes": "Store Gemini draft in First Drafts sheet"
+        }
       }
     },
     {
@@ -214,8 +208,7 @@
         "designer": {
           "x": 1800,
           "y": 0
-        },
-        "notes": "MODULE 5: Claude selectively edits with professional polish"
+        }
       }
     },
     {
@@ -239,8 +232,7 @@
         "designer": {
           "x": 2100,
           "y": 0
-        },
-        "notes": "Store editorial notes and improvements"
+        }
       }
     },
     {
@@ -255,8 +247,7 @@
         "designer": {
           "x": 2400,
           "y": 0
-        },
-        "notes": "MODULE 6: Format chapter with header, body, and metadata footer"
+        }
       }
     },
     {
@@ -274,8 +265,7 @@
         "designer": {
           "x": 2700,
           "y": 0
-        },
-        "notes": "MODULE 7: Create Google Doc with formatted chapter"
+        }
       }
     },
     {
@@ -302,8 +292,7 @@
         "designer": {
           "x": 3000,
           "y": 0
-        },
-        "notes": "Track costs and metrics per chapter"
+        }
       }
     },
     {
@@ -328,8 +317,7 @@
         "designer": {
           "x": 3300,
           "y": 0
-        },
-        "notes": "Update Context Library for next chapter continuity"
+        }
       }
     },
     {
@@ -341,8 +329,7 @@
         "designer": {
           "x": 3600,
           "y": 0
-        },
-        "notes": "MODULE 8: Check if book is complete or continue to next chapter"
+        }
       },
       "routes": [
         {
@@ -357,15 +344,14 @@
               },
               "mapper": {
                 "to": "{{1.notificationEmail}}",
-                "subject": "✅ Book Complete: Attention is Currency - {{1.totalChapters}} Chapters Published",
-                "body": "Congratulations! Your book 'Attention is Currency' is now complete!\n\n📖 PROJECT SUMMARY:\n- Total Chapters: {{1.totalChapters}}\n- Book Status: PUBLISHED\n- All chapters are ready in Google Docs\n- Total Project Cost: Tracked in Cost Tracking sheet\n\n🎉 Your manuscript is ready for final review and publication.\n\nThank you for using the Attention is Currency Book Writing Automation system!"
+                "subject": "Book Complete: Attention is Currency - {{1.totalChapters}} Chapters",
+                "body": "Your book is complete!\n\nBook: Attention is Currency\nTotal Chapters: {{1.totalChapters}}\nGoogle Doc: {{10.url}}\n\nThank you for using Book Writing Automation."
               },
               "metadata": {
                 "designer": {
                   "x": 3900,
                   "y": 0
-                },
-                "notes": "Send completion email when all chapters are done"
+                }
               }
             }
           ]
@@ -385,8 +371,7 @@
                 "designer": {
                   "x": 3900,
                   "y": 0
-                },
-                "notes": "Wait for next chapter webhook (1 hour default interval)"
+                }
               }
             }
           ]
@@ -395,8 +380,23 @@
     }
   ],
   "metadata": {
-    "version": 1,
     "instant": false,
-    "notes": "Production-ready automated workflow for 'Attention is Currency' book. Uses ChatGPT (strategic planning), Google Gemini (research and primary writing), and Claude (professional editing). Triggered by Google Sheets, tracks progress and costs, publishes to Google Docs."
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": false,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "us2.make.com"
   }
 }
