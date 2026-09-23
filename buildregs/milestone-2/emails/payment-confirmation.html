@@ -1,0 +1,174 @@
+<!--
+  BuildRegs — Payment Confirmation Email
+  Target: Phase 3 "Payment & Assignment" scenario, router branch 4a (Email client).
+  Subject line: Payment received — your project is booked in ({{20.projectRef}})
+
+  TOKENS
+  ------
+  {{20.xxx}}  = output of the new "Set multiple variables" module added immediately
+                after the FluentCRM update and before the Router.
+                Replace "20" with the id Make actually assigns.
+  LOGO_URL    = hosted logo. Replace every occurrence before going live.
+
+  Variables consumed here:
+    20.greetingName    -> "Hi Sarah," or "Hello,"
+    20.projectRef      -> BR-Q-20260923-0042
+    20.amountPaid      -> "949.00"   (pounds, 2dp, no symbol — symbol is in the markup)
+    20.paymentDate     -> "23 September 2026, 14:07"
+    20.paymentRef      -> Stripe payment intent id, shown as the receipt reference
+    20.propertyBlock   -> full <tr> for the property address, or "" if unknown
+    20.turnaroundLine  -> "Around 7 working days" sentence, or "" for manual-turnaround jobs
+  See ../APPLY_GUIDE.md section 3 for the exact expressions.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payment received</title>
+</head>
+<body style="margin:0; padding:0; background-color:#F4F6F8;">
+
+<div style="display:none; max-height:0; overflow:hidden; opacity:0; color:transparent; height:0; width:0;">
+  Thank you — your payment has been received and your project is booked in.
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F4F6F8;">
+  <tr>
+    <td align="center" style="padding:24px 12px;">
+
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:100%; background-color:#FFFFFF; border:1px solid #E3E8ED; border-radius:8px;">
+
+        <!-- header -->
+        <tr>
+          <td align="left" style="padding:28px 32px 20px 32px; border-bottom:1px solid #E3E8ED;">
+            <img src="LOGO_URL" alt="BuildRegs" width="170" style="display:block; width:170px; max-width:170px; height:auto; border:0;">
+          </td>
+        </tr>
+
+        <!-- confirmation banner -->
+        <tr>
+          <td style="padding:32px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#EDF7F1; border:1px solid #CBE5D7; border-radius:6px;">
+              <tr>
+                <td style="padding:16px 20px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+                  <p style="margin:0; font-size:15px; line-height:22px; color:#1E7A4B; font-weight:600;">
+                    Payment received — your project is booked in.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- intro -->
+        <tr>
+          <td style="padding:24px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <p style="margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;">
+              {{20.greetingName}}
+            </p>
+            <p style="margin:0 0 24px 0; font-size:15px; line-height:24px; color:#33414D;">
+              Thank you — we've received your payment and your project has been passed to our
+              technical team. {{20.turnaroundLine}}
+            </p>
+          </td>
+        </tr>
+
+        <!-- receipt -->
+        <tr>
+          <td style="padding:0 32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;">
+              <tr>
+                <td style="padding:20px 24px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88; width:150px;">Your reference</td>
+                      <td style="padding:0 0 10px 0; font-size:15px; line-height:20px; color:#17324B; font-weight:600;">{{20.projectRef}}</td>
+                    </tr>
+                    {{20.propertyBlock}}
+                    <tr>
+                      <td style="padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88;">Amount paid</td>
+                      <td style="padding:0 0 10px 0; font-size:15px; line-height:20px; color:#17324B; font-weight:600;">&pound;{{20.amountPaid}}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88;">Date</td>
+                      <td style="padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;">{{20.paymentDate}}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:0; font-size:13px; line-height:20px; color:#6B7A88;">Receipt reference</td>
+                      <td style="padding:0; font-size:13px; line-height:20px; color:#33414D;">{{20.paymentRef}}</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- what happens next -->
+        <tr>
+          <td style="padding:28px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <h2 style="margin:0 0 14px 0; font-size:17px; line-height:24px; font-weight:600; color:#17324B;">
+              What happens next
+            </h2>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td valign="top" style="padding:0 12px 12px 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600; width:20px;">1</td>
+                <td style="padding:0 0 12px 0; font-size:15px; line-height:24px; color:#33414D;">
+                  Your project is assigned to a technician and added to our production schedule.
+                </td>
+              </tr>
+              <tr>
+                <td valign="top" style="padding:0 12px 12px 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600;">2</td>
+                <td style="padding:0 0 12px 0; font-size:15px; line-height:24px; color:#33414D;">
+                  We'll come back to you if we need any further information or measurements.
+                </td>
+              </tr>
+              <tr>
+                <td valign="top" style="padding:0 12px 0 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600;">3</td>
+                <td style="padding:0; font-size:15px; line-height:24px; color:#33414D;">
+                  Your completed drawings and calculations are issued by email, ready for Building Control.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- closing -->
+        <tr>
+          <td style="padding:24px 32px 32px 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <p style="margin:0 0 8px 0; font-size:15px; line-height:24px; color:#33414D;">
+              If you need anything in the meantime, reply to this email quoting your reference.
+            </p>
+            <p style="margin:0; font-size:15px; line-height:24px; color:#33414D;">
+              Kind regards,<br>
+              <span style="color:#17324B; font-weight:600;">The BuildRegs Team</span>
+            </p>
+          </td>
+        </tr>
+
+        <!-- footer -->
+        <tr>
+          <td style="padding:20px 32px 24px 32px; border-top:1px solid #E3E8ED; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <p style="margin:0 0 6px 0; font-size:12px; line-height:19px; color:#6B7A88;">
+              This work is carried out under our
+              <a href="https://buildregs.co.uk/terms-and-conditions/" style="color:#17324B; text-decoration:underline;">Terms of Service</a>,
+              accepted at checkout.
+            </p>
+            <p style="margin:0; font-size:12px; line-height:19px; color:#6B7A88;">
+              BuildRegs &middot; Building Regulations drawings &amp; structural calculations<br>
+              <a href="https://buildregs.co.uk" style="color:#17324B; text-decoration:underline;">buildregs.co.uk</a>
+              &nbsp;&middot;&nbsp;
+              <a href="mailto:support@buildregs.co.uk" style="color:#17324B; text-decoration:underline;">support@buildregs.co.uk</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

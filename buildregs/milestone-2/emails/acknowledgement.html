@@ -1,0 +1,146 @@
+<!--
+  BuildRegs — Enquiry Acknowledgement Email
+  Target: Phase 1 "Intake (with attribution)" scenario, module 7a (Email client).
+  Subject line: We've received your enquiry — {{20.projectRef}}
+
+  TOKENS
+  ------
+  {{20.xxx}}  = output of the new "Set multiple variables" module added immediately
+                before the Router. Replace "20" with the id Make actually assigns.
+  LOGO_URL    = hosted logo. Replace every occurrence before going live.
+                Do NOT use base64 — Gmail strips it.
+
+  Variables consumed here:
+    20.greetingName   -> "Hi Sarah," or "Hello," (never an empty name)
+    20.projectRef     -> BR-20260923-0042
+    20.propertyBlock  -> full <tr> for the property address, or "" if unknown
+    20.filesBlock     -> full <tr> confirming files received, or the
+                         "we couldn't read your upload" <tr> if the upload failed
+  See ../APPLY_GUIDE.md section 2 for the exact expressions.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>We've received your enquiry</title>
+</head>
+<body style="margin:0; padding:0; background-color:#F4F6F8;">
+
+<!-- preheader: shown in the inbox preview, hidden in the body -->
+<div style="display:none; max-height:0; overflow:hidden; opacity:0; color:transparent; height:0; width:0;">
+  Thanks for contacting BuildRegs — here's what happens next with your enquiry.
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F4F6F8;">
+  <tr>
+    <td align="center" style="padding:24px 12px;">
+
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:100%; background-color:#FFFFFF; border:1px solid #E3E8ED; border-radius:8px;">
+
+        <!-- header -->
+        <tr>
+          <td align="left" style="padding:28px 32px 20px 32px; border-bottom:1px solid #E3E8ED;">
+            <img src="LOGO_URL" alt="BuildRegs" width="170" style="display:block; width:170px; max-width:170px; height:auto; border:0;">
+          </td>
+        </tr>
+
+        <!-- intro -->
+        <tr>
+          <td style="padding:32px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <h1 style="margin:0 0 16px 0; font-size:22px; line-height:30px; font-weight:600; color:#17324B;">
+              Thanks — we've received your enquiry
+            </h1>
+            <p style="margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;">
+              {{20.greetingName}}
+            </p>
+            <p style="margin:0 0 24px 0; font-size:15px; line-height:24px; color:#33414D;">
+              Thank you for getting in touch with BuildRegs. Your enquiry is with our technical team,
+              who will review the details and prepare your quotation.
+            </p>
+          </td>
+        </tr>
+
+        <!-- details -->
+        <tr>
+          <td style="padding:0 32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;">
+              <tr>
+                <td style="padding:20px 24px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88; width:150px;">Your reference</td>
+                      <td style="padding:0 0 10px 0; font-size:15px; line-height:20px; color:#17324B; font-weight:600;">{{20.projectRef}}</td>
+                    </tr>
+                    {{20.propertyBlock}}
+                    {{20.filesBlock}}
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- what happens next -->
+        <tr>
+          <td style="padding:28px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <h2 style="margin:0 0 14px 0; font-size:17px; line-height:24px; font-weight:600; color:#17324B;">
+              What happens next
+            </h2>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td valign="top" style="padding:0 12px 12px 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600; width:20px;">1</td>
+                <td style="padding:0 0 12px 0; font-size:15px; line-height:24px; color:#33414D;">
+                  We review your plans and project details.
+                </td>
+              </tr>
+              <tr>
+                <td valign="top" style="padding:0 12px 12px 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600;">2</td>
+                <td style="padding:0 0 12px 0; font-size:15px; line-height:24px; color:#33414D;">
+                  We send you a fixed-fee quotation setting out exactly what's included.
+                </td>
+              </tr>
+              <tr>
+                <td valign="top" style="padding:0 12px 0 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600;">3</td>
+                <td style="padding:0; font-size:15px; line-height:24px; color:#33414D;">
+                  Once you're happy, you accept online and we begin your drawings.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- closing -->
+        <tr>
+          <td style="padding:24px 32px 32px 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <p style="margin:0 0 8px 0; font-size:15px; line-height:24px; color:#33414D;">
+              If anything about your project changes in the meantime, just reply to this email
+              and quote your reference.
+            </p>
+            <p style="margin:0; font-size:15px; line-height:24px; color:#33414D;">
+              Kind regards,<br>
+              <span style="color:#17324B; font-weight:600;">The BuildRegs Team</span>
+            </p>
+          </td>
+        </tr>
+
+        <!-- footer -->
+        <tr>
+          <td style="padding:20px 32px 24px 32px; border-top:1px solid #E3E8ED; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <p style="margin:0; font-size:12px; line-height:19px; color:#6B7A88;">
+              BuildRegs &middot; Building Regulations drawings &amp; structural calculations<br>
+              <a href="https://buildregs.co.uk" style="color:#17324B; text-decoration:underline;">buildregs.co.uk</a>
+              &nbsp;&middot;&nbsp;
+              <a href="mailto:support@buildregs.co.uk" style="color:#17324B; text-decoration:underline;">support@buildregs.co.uk</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>

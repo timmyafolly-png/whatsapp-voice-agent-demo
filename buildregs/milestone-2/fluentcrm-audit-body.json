@@ -1,0 +1,24 @@
+{
+  "_comment_1": "Phase 3 (Payment & Assignment) module 3 — http:ActionSendData, POST to",
+  "_comment_2": "https://buildregs.co.uk/wp-json/fluent-crm/v2/subscribers",
+  "_comment_3": "Content-Type: application/json  (set via the Content-type DROPDOWN only — do not",
+  "_comment_4": "add a manual Content-Type header as well, or you get rest_invalid_json).",
+  "_comment_5": "Keep the Resume error handler on this module: if the CRM write fails the",
+  "_comment_6": "confirmation and team emails must still go out.",
+  "_comment_7": "If your existing module nests custom fields under \"custom_values\", keep that",
+  "_comment_8": "nesting and simply add the new audit keys inside it. Remove all _comment_* keys.",
+
+  "email": "{{20.payerEmail}}",
+  "__force_update": true,
+
+  "quote_status": "Paid",
+  "payment_date": "{{20.paymentDate}}",
+
+  "project_ref": "{{20.projectRef}}",
+  "stripe_payment_id": "{{20.paymentRef}}",
+  "stripe_session_id": "{{20.stripeSessionId}}",
+  "amount_paid": "{{20.amountPaid}}",
+  "payment_currency": "{{upper(1.data.object.currency)}}",
+  "terms_version": "{{20.termsVersion}}",
+  "terms_accepted_at": "{{20.paymentDate}}"
+}

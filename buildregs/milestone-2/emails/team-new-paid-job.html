@@ -1,0 +1,122 @@
+<!--
+  BuildRegs — Internal "New Paid Job" Notification
+  Target: Phase 3 "Payment & Assignment" scenario, router branch 4b (Notify team).
+  Subject line: NEW PAID JOB — {{20.projectType}} — {{20.projectRef}}
+  To: TEAM_INBOX   (see ../CONFIG.md — currently projects@buildregs.co.uk, real inbox TBC)
+
+  This is an INTERNAL email. Unlike the client-facing templates it deliberately
+  carries the operational detail: amount, Stripe ids, client contact, and the
+  internal adjustment reason if one was applied. None of this may ever appear in
+  a customer email.
+
+  Variables consumed here (module 20, same Set-variables module as 4a):
+    20.projectRef      20.projectType     20.amountPaid
+    20.paymentDate     20.paymentRef      20.stripeSessionId
+    20.clientName      20.clientEmail     20.propertyAddressPlain
+    20.adjustmentBlock -> internal note <tr>, or "" when no adjustment was applied
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New paid job</title>
+</head>
+<body style="margin:0; padding:0; background-color:#F4F6F8;">
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F4F6F8;">
+  <tr>
+    <td align="center" style="padding:24px 12px;">
+
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:100%; background-color:#FFFFFF; border:1px solid #E3E8ED; border-radius:8px;">
+
+        <tr>
+          <td style="padding:24px 28px 16px 28px; background-color:#17324B; border-radius:8px 8px 0 0; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <p style="margin:0 0 4px 0; font-size:12px; line-height:18px; color:#9DB4C8; letter-spacing:0.08em; text-transform:uppercase;">
+              Payment received &middot; start project
+            </p>
+            <h1 style="margin:0; font-size:20px; line-height:28px; font-weight:600; color:#FFFFFF;">
+              {{20.projectRef}} &mdash; {{20.projectType}}
+            </h1>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:24px 28px 0 28px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <h2 style="margin:0 0 12px 0; font-size:14px; line-height:20px; font-weight:600; color:#17324B; letter-spacing:0.04em; text-transform:uppercase;">Client</h2>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding:0 0 8px 0; font-size:13px; line-height:20px; color:#6B7A88; width:150px;">Name</td>
+                <td style="padding:0 0 8px 0; font-size:14px; line-height:20px; color:#33414D;">{{20.clientName}}</td>
+              </tr>
+              <tr>
+                <td style="padding:0 0 8px 0; font-size:13px; line-height:20px; color:#6B7A88;">Email</td>
+                <td style="padding:0 0 8px 0; font-size:14px; line-height:20px; color:#33414D;">
+                  <a href="mailto:{{20.clientEmail}}" style="color:#17324B;">{{20.clientEmail}}</a>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:0 0 8px 0; font-size:13px; line-height:20px; color:#6B7A88;">Property</td>
+                <td style="padding:0 0 8px 0; font-size:14px; line-height:20px; color:#33414D;">{{20.propertyAddressPlain}}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:20px 28px 0 28px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <h2 style="margin:0 0 12px 0; font-size:14px; line-height:20px; font-weight:600; color:#17324B; letter-spacing:0.04em; text-transform:uppercase;">Payment</h2>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;">
+              <tr><td style="padding:16px 20px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="padding:0 0 8px 0; font-size:13px; line-height:20px; color:#6B7A88; width:150px;">Amount</td>
+                    <td style="padding:0 0 8px 0; font-size:15px; line-height:20px; color:#1E7A4B; font-weight:600;">&pound;{{20.amountPaid}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 0 8px 0; font-size:13px; line-height:20px; color:#6B7A88;">Paid at</td>
+                    <td style="padding:0 0 8px 0; font-size:14px; line-height:20px; color:#33414D;">{{20.paymentDate}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 0 8px 0; font-size:13px; line-height:20px; color:#6B7A88;">Payment intent</td>
+                    <td style="padding:0 0 8px 0; font-size:13px; line-height:20px; color:#33414D;">{{20.paymentRef}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0; font-size:13px; line-height:20px; color:#6B7A88;">Checkout session</td>
+                    <td style="padding:0; font-size:13px; line-height:20px; color:#33414D;">{{20.stripeSessionId}}</td>
+                  </tr>
+                </table>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- internal-only notes; renders nothing when no adjustment was applied -->
+        {{20.adjustmentBlock}}
+
+        <tr>
+          <td style="padding:24px 28px 28px 28px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="background-color:#1E7A4B; border-radius:5px;">
+                  <a href="https://drive.google.com/drive/folders/1XQGcexK1EA7COStPHEGSu7W6JmS_Gw8f"
+                     style="display:inline-block; padding:12px 22px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif; font-size:14px; line-height:20px; font-weight:600; color:#FFFFFF; text-decoration:none;">
+                    Open Projects folder
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:12px 0 0 0; font-size:12px; line-height:19px; color:#6B7A88;">
+              The client's folder is named with the reference above.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>
