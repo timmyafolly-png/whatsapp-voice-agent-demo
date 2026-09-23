@@ -1,0 +1,84 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 1504 >>
+stream
+BT
+/F1 18 Tf
+1 0 0 1 70 780 Tm
+(BUILDREGS - AUTOMATION TEST DOCUMENT) Tj
+/F1 11 Tf
+1 0 0 1 70 752 Tm
+(This file is a test fixture. It is not a real drawing and carries no design information.) Tj
+/F1 11 Tf
+1 0 0 1 70 734 Tm
+(Submitted to exercise the Phase 1 intake automation end to end.) Tj
+/F1 14 Tf
+1 0 0 1 70 694 Tm
+(Mock enquiry details) Tj
+/F1 11 Tf
+1 0 0 1 70 670 Tm
+(Project type ......... Loft Conversion) Tj
+/F1 11 Tf
+1 0 0 1 70 652 Tm
+(Property ............. 14 Test Street, Sampleton, ST1 2AB) Tj
+/F1 11 Tf
+1 0 0 1 70 634 Tm
+(Storeys .............. Two, plus proposed loft) Tj
+/F1 11 Tf
+1 0 0 1 70 616 Tm
+(Roof ................. Cut timber, pitched, approx 42 degrees) Tj
+/F1 11 Tf
+1 0 0 1 70 598 Tm
+(Proposed ............. Rear dormer, ensuite, staircase from first floor landing) Tj
+/F1 14 Tf
+1 0 0 1 70 558 Tm
+(What this file is checking) Tj
+/F1 11 Tf
+1 0 0 1 70 534 Tm
+(1. That the uploaded file keeps this filename in Google Drive) Tj
+/F1 11 Tf
+1 0 0 1 70 516 Tm
+(   rather than being saved as file.txt) Tj
+/F1 11 Tf
+1 0 0 1 70 494 Tm
+(2. That the file lands inside the correct client project folder) Tj
+/F1 11 Tf
+1 0 0 1 70 472 Tm
+(3. That the acknowledgement email reports the plans as Received) Tj
+/F1 11 Tf
+1 0 0 1 70 432 Tm
+(Deliberately kept to a few kilobytes: the intake scenario has previously) Tj
+/F1 11 Tf
+1 0 0 1 70 414 Tm
+(failed with MaxFileSizeExceededError on large uploads.) Tj
+/F1 10 Tf
+1 0 0 1 70 360 Tm
+(Generated for BuildRegs Milestone 2 acceptance testing.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001796 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1866
+%%EOF
