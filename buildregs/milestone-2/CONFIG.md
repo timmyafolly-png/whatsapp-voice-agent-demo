@@ -35,3 +35,27 @@ The source logo has a transparent background with a black wordmark, so it
 will disappear against a dark backdrop. The templates place it on an
 explicitly white card, which holds up in most clients, but a version with a
 solid white background is safer if Gmail dark mode ever becomes a concern.
+
+---
+
+## Guard filter added 2026-09-23
+
+Phase 1 module 2 now carries a filter, "Guard: required fields present":
+email exists, email contains "@", and `__submission.serial_number` exists.
+
+A payload failing any of those stops at the webhook. No folder is created,
+no file uploaded, no CRM write, no failed email, and crucially no error
+counted against the scenario's maxErrors, which is what was tripping Make's
+automatic deactivation.
+
+Module 5 also gained a filter requiring `4.fileSize > 0`, so a failed or
+absent download can no longer produce a 0-byte "Untitled" file in the
+client's Drive.
+
+Blocked runs are not silent: Make's execution history records them and shows
+the filter that stopped them. A no-file enquiry is still a valid enquiry and
+passes the guard, landing on the "Not received" wording as designed.
+
+Make cannot roll back a created Drive folder, a sent email or a posted CRM
+record. `builtin:Rollback` only covers transactional modules, which these are
+not. Preventing the run is the fix; undoing it is not available.
