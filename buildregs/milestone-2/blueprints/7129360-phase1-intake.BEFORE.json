@@ -1,0 +1,270 @@
+{
+  "_backup_note": "Captured 2026-09-23 from Make eu1, org BuildRegs (8783114), team BuildRegs Automation (2535413). State BEFORE any Milestone 2 change. Two deliberate modifications: (1) the Authorization header value is REDACTED — the live value is a WordPress application password that must not live in git; restore it from the Make UI or a password manager. (2) metadata.designer.samples and metadata.expect/interface blocks are omitted — they are cached sample payloads and regenerated UI schema, not configuration, and the samples contained client PII. Everything that defines behaviour is preserved verbatim.",
+  "id": 7129360,
+  "name": "BuildRegs Phase 1 - Intake (with attribution)",
+  "teamId": 2535413,
+  "hookId": 3611527,
+  "isActive": false,
+  "lastEdit": "2026-09-09T03:15:45.508Z",
+  "scheduling": { "type": "immediately", "maximum_runs_per_minute": 100 },
+  "blueprint": {
+    "name": "BuildRegs Phase 1 - Intake (with attribution)",
+    "metadata": {
+      "instant": true,
+      "version": 1,
+      "scenario": {
+        "dlq": false,
+        "slots": null,
+        "dataloss": false,
+        "maxErrors": 3,
+        "autoCommit": true,
+        "roundtrips": 1,
+        "sequential": false,
+        "confidential": false,
+        "autoCommitTriggerLast": true
+      }
+    },
+    "flow": [
+      {
+        "id": 1,
+        "module": "gateway:CustomWebHook",
+        "version": 1,
+        "mapper": {},
+        "parameters": { "hook": 3611527, "maxResults": 1 },
+        "metadata": {
+          "designer": { "x": 0, "y": 300, "name": "1. New Enquiry (Fluent Forms webhook)" },
+          "restore": { "parameters": { "hook": { "data": { "editable": "true" }, "label": "BuildRegs Enquiry" } } }
+        }
+      },
+      {
+        "id": 2,
+        "module": "util:SetVariable2",
+        "version": 1,
+        "mapper": {
+          "name": "projectRef",
+          "scope": "roundtrip",
+          "value": "BR-{{formatDate(now; \"YYYYMMDD\")}}-{{1.email}}"
+        },
+        "parameters": {},
+        "metadata": {
+          "designer": { "x": 300, "y": 300, "name": "2. Generate Project Ref" },
+          "restore": { "expect": { "scope": { "label": "One cycle" } } }
+        }
+      },
+      {
+        "id": 3,
+        "module": "google-drive:createAFolder",
+        "version": 4,
+        "mapper": {
+          "name": "{{2.projectRef}}",
+          "shared": false,
+          "folderId": "1XQGcexK1EA7COStPHEGSu7W6JmS_Gw8f",
+          "destination": "drive"
+        },
+        "parameters": { "__IMTCONN__": 10263365 },
+        "metadata": {
+          "designer": { "x": 600, "y": 300, "name": "3. Create client project folder" },
+          "restore": {
+            "expect": {
+              "folderId": { "mode": "edit", "path": ["BuildRegs - Operations"] },
+              "destination": { "label": "My Drive" }
+            },
+            "parameters": {
+              "__IMTCONN__": {
+                "data": { "scoped": "true", "connection": "google-drive" },
+                "label": "Collins's Google Drive connection (collsdigital@gmail.com)"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "module": "http:ActionGetFile",
+        "version": 3,
+        "mapper": {
+          "url": "{{1.`file-upload`[]}}",
+          "method": "get",
+          "serializeUrl": false,
+          "shareCookies": false
+        },
+        "parameters": { "handleErrors": false },
+        "metadata": { "designer": { "x": 900, "y": 300, "name": "4. Download uploaded client file" }, "restore": {} }
+      },
+      {
+        "id": 5,
+        "module": "google-drive:uploadAFile",
+        "version": 4,
+        "mapper": {
+          "data": "{{4.data}}",
+          "select": "map",
+          "convert": false,
+          "filename": "{{4.fileName}}",
+          "folderId": "{{3.id}}"
+        },
+        "parameters": { "__IMTCONN__": 10263365 },
+        "metadata": {
+          "designer": { "x": 1200, "y": 300, "name": "5. Upload file into project folder" },
+          "restore": {
+            "expect": { "select": { "label": "Enter manually" } },
+            "parameters": {
+              "__IMTCONN__": {
+                "data": { "scoped": "true", "connection": "google-drive" },
+                "label": "Collins's Google Drive connection (collsdigital@gmail.com)"
+              }
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "module": "http:ActionSendData",
+        "version": 3,
+        "mapper": {
+          "ca": "",
+          "qs": [],
+          "url": "https://buildregs.co.uk/wp-json/fluent-crm/v2/subscribers",
+          "data": "{\"email\":\"{{1.email}}\",\"first_name\":\"{{1.names.first_name}}\",\"last_name\":\"{{1.names.last_name}}\",\"phone\":\"{{1.phone}}\",\"status\":\"subscribed\",\"tags\":[\"New Enquiry\"]",
+          "gzip": false,
+          "method": "post",
+          "headers": [ { "name": "Authorization", "value": "Basic <REDACTED-WORDPRESS-APP-PASSWORD>" } ],
+          "timeout": "",
+          "useMtls": false,
+          "authPass": "",
+          "authUser": "",
+          "bodyType": "raw",
+          "contentType": "application/json",
+          "serializeUrl": false,
+          "shareCookies": false,
+          "parseResponse": true,
+          "followRedirect": true,
+          "useQuerystring": false,
+          "followAllRedirects": false,
+          "rejectUnauthorized": true
+        },
+        "parameters": { "handleErrors": false, "useNewZLibDeCompress": true },
+        "onerror": [
+          {
+            "id": 10,
+            "module": "builtin:Ignore",
+            "version": 1,
+            "mapper": {},
+            "parameters": {},
+            "metadata": { "designer": { "x": 1800, "y": 600 }, "restore": {} }
+          }
+        ],
+        "metadata": {
+          "advanced": true,
+          "designer": { "x": 1500, "y": 300, "name": "6. Create contact in FluentCRM (+ attribution)" },
+          "restore": {
+            "expect": {
+              "qs": { "mode": "chose" },
+              "method": { "mode": "chose", "label": "POST" },
+              "headers": { "mode": "chose", "items": [null] },
+              "bodyType": { "label": "Raw" },
+              "contentType": { "label": "JSON (application/json)" }
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "module": "builtin:BasicRouter",
+        "version": 1,
+        "mapper": null,
+        "parameters": {},
+        "metadata": { "designer": { "x": 1800, "y": 150, "name": "7. Router: client + team" } },
+        "routes": [
+          {
+            "flow": [
+              {
+                "id": 8,
+                "module": "email:ActionSendEmail",
+                "version": 6,
+                "mapper": {
+                  "cc": [],
+                  "to": ["{{1.email}}"],
+                  "bcc": [],
+                  "from": "",
+                  "html": "Hi {{1.name}},<br><br>Thanks for your enquiry with BuildRegs. We've received your documents and your project reference is <strong>{{2.projectRef}}</strong>.<br><br>We'll review everything and send your quote shortly.<br><br>Kind regards,<br>The BuildRegs Team",
+                  "sender": "",
+                  "headers": [],
+                  "replyTo": "",
+                  "subject": "We've received your BuildRegs enquiry ({{2.projectRef}})",
+                  "priority": "normal",
+                  "inReplyTo": "",
+                  "references": [],
+                  "attachments": [],
+                  "contentType": "html"
+                },
+                "parameters": { "account": 10482851, "saveAfterSent": false },
+                "metadata": {
+                  "designer": { "x": 2100, "y": 0, "name": "7a. Email client: enquiry received" },
+                  "restore": {
+                    "expect": {
+                      "cc": { "mode": "chose" },
+                      "to": { "mode": "chose", "items": [null] },
+                      "bcc": { "mode": "chose" },
+                      "priority": { "label": "Normal" },
+                      "references": { "mode": "chose" },
+                      "attachments": { "mode": "chose" },
+                      "contentType": { "label": "HTML" }
+                    },
+                    "parameters": {
+                      "account": { "data": { "scoped": "true", "connection": "google" }, "label": "BuildRegs Support Google" },
+                      "saveAfterSent": { "label": "No" }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "flow": [
+              {
+                "id": 9,
+                "module": "email:ActionSendEmail",
+                "version": 6,
+                "mapper": {
+                  "cc": [],
+                  "to": ["projects@buildregs.co.uk"],
+                  "bcc": [],
+                  "from": "",
+                  "html": "New enquiry received.<br><br>Ref: {{2.projectRef}}<br>Name: {{1.names.first_name}} {{1.names.last_name}}<br>Email: {{1.email}}<br>Phone: {{1.phone}}<br>Source: {{1.utm_source}} / {{1.utm_medium}} / {{1.utm_campaign}}<br>Folder: <a href=\"{{3.webViewLink}}\">Open project folder</a><br><br>Action: review and send quote.",
+                  "sender": "",
+                  "headers": [],
+                  "replyTo": "",
+                  "subject": "New BuildRegs enquiry: {{2.projectRef}} - {{1.names.first_name}}{{1.names.last_name}}",
+                  "priority": "normal",
+                  "inReplyTo": "",
+                  "references": [],
+                  "attachments": [],
+                  "contentType": "html"
+                },
+                "parameters": { "account": 10482851, "saveAfterSent": false },
+                "metadata": {
+                  "designer": { "x": 2100, "y": 300, "name": "7b. Email you: prepare quote" },
+                  "restore": {
+                    "expect": {
+                      "cc": { "mode": "chose" },
+                      "to": { "mode": "chose", "items": [null] },
+                      "bcc": { "mode": "chose" },
+                      "priority": { "label": "Normal" },
+                      "references": { "mode": "chose" },
+                      "attachments": { "mode": "chose" },
+                      "contentType": { "label": "HTML" }
+                    },
+                    "parameters": {
+                      "account": { "data": { "scoped": "true", "connection": "google" }, "label": "BuildRegs Support Google (support@buildregs.co.uk)" },
+                      "saveAfterSent": { "label": "No" }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

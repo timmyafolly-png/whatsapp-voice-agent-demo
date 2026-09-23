@@ -1,0 +1,193 @@
+{
+  "_backup_note": "Captured 2026-09-23 from Make eu1, org BuildRegs (8783114), team BuildRegs Automation (2535413). State BEFORE any Milestone 2 change. Same two modifications as the intake backup: Authorization header REDACTED, and metadata.designer.samples plus metadata.expect/interface omitted. Everything defining behaviour is verbatim.",
+  "id": 7248863,
+  "name": "BuildRegs Phase 3 - Payment & Assignment (Scenario B)",
+  "teamId": 2535413,
+  "hookId": 3664726,
+  "isActive": false,
+  "lastEdit": "2026-09-06T00:26:13.332Z",
+  "scheduling": { "type": "immediately", "maximum_runs_per_minute": 100 },
+  "blueprint": {
+    "name": "BuildRegs Phase 3 - Payment & Assignment (Scenario B)",
+    "metadata": {
+      "instant": true,
+      "version": 1,
+      "scenario": {
+        "dlq": false,
+        "slots": null,
+        "dataloss": false,
+        "maxErrors": 3,
+        "autoCommit": true,
+        "roundtrips": 1,
+        "sequential": false,
+        "confidential": false,
+        "autoCommitTriggerLast": true
+      }
+    },
+    "flow": [
+      {
+        "id": 1,
+        "module": "gateway:CustomWebHook",
+        "version": 1,
+        "mapper": {},
+        "parameters": { "hook": 3664726, "maxResults": 1 },
+        "metadata": {
+          "designer": { "x": 0, "y": 0, "name": "1. Payment received (Stripe webhook)" },
+          "restore": { "parameters": { "hook": { "data": { "editable": "true" }, "label": "Stripe payment received" } } }
+        }
+      },
+      {
+        "id": 8,
+        "module": "util:SetVariable2",
+        "version": 1,
+        "mapper": {
+          "name": "payerEmail",
+          "scope": "roundtrip",
+          "value": "{{1.data.object.metadata.client_email}}"
+        },
+        "parameters": {},
+        "metadata": {
+          "designer": { "x": 347, "y": -2, "name": "payerEmail" },
+          "restore": { "expect": { "scope": { "label": "One cycle" } } }
+        }
+      },
+      {
+        "id": 3,
+        "module": "http:ActionSendData",
+        "version": 3,
+        "mapper": {
+          "ca": "",
+          "qs": [],
+          "url": "https://buildregs.co.uk/wp-json/fluent-crm/v2/subscribers",
+          "data": "{\r\n  \"email\": \"{{8.payerEmail}}\",\r\n  \"status\": \"subscribed\",\r\n  \"__force_update\": true,\r\n  \"custom_values\": {\r\n    \"quote_status\": \"Paid\",\r\n    \"payment_date\": \"{{now}}\"\r\n  }\r\n}",
+          "gzip": true,
+          "method": "post",
+          "headers": [ { "name": "Authorization", "value": "Basic <REDACTED-WORDPRESS-APP-PASSWORD>" } ],
+          "timeout": "",
+          "useMtls": false,
+          "authPass": "",
+          "authUser": "",
+          "bodyType": "raw",
+          "contentType": "application/json",
+          "serializeUrl": false,
+          "shareCookies": false,
+          "parseResponse": true,
+          "followRedirect": true,
+          "useQuerystring": false,
+          "followAllRedirects": false,
+          "rejectUnauthorized": true
+        },
+        "parameters": { "handleErrors": true, "useNewZLibDeCompress": true },
+        "metadata": {
+          "designer": { "x": 741, "y": 0, "name": "3. Update FluentCRM: mark Paid" },
+          "restore": {
+            "expect": {
+              "qs": { "mode": "chose" },
+              "method": { "mode": "chose", "label": "POST" },
+              "headers": { "mode": "chose", "items": [null] },
+              "bodyType": { "label": "Raw" },
+              "contentType": { "label": "JSON (application/json)" }
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "module": "builtin:BasicRouter",
+        "version": 1,
+        "mapper": null,
+        "metadata": { "designer": { "x": 1050, "y": 0, "name": "4. Router: client + team" } },
+        "routes": [
+          {
+            "flow": [
+              {
+                "id": 5,
+                "module": "email:ActionSendEmail",
+                "version": 6,
+                "mapper": {
+                  "cc": [],
+                  "to": ["{{8.payerEmail}}"],
+                  "bcc": [],
+                  "from": "",
+                  "html": "Hi,<br><br>Thank you - we've received your payment and your project is now confirmed.<br><br>Project reference: <strong>{{1.data.object.metadata.project_ref}}</strong><br>Amount paid: <strong>&pound;{{1.data.object.metadata.final_price}}</strong><br><br>Our team will begin work and keep you updated on progress.<br><br>Kind regards,<br>The BuildRegs Team",
+                  "sender": "",
+                  "headers": [],
+                  "replyTo": "",
+                  "subject": "Payment received - BuildRegs ({{1.data.object.metadata.project_ref}})",
+                  "priority": "normal",
+                  "inReplyTo": "",
+                  "references": [],
+                  "attachments": [],
+                  "contentType": "html"
+                },
+                "parameters": { "account": 10482851, "saveAfterSent": false },
+                "metadata": {
+                  "designer": { "x": 1500, "y": -166, "name": "4a. Email client: payment confirmation" },
+                  "restore": {
+                    "expect": {
+                      "cc": { "mode": "chose" },
+                      "to": { "mode": "chose", "items": [null] },
+                      "bcc": { "mode": "chose" },
+                      "priority": { "label": "Normal" },
+                      "references": { "mode": "chose" },
+                      "attachments": { "mode": "chose" },
+                      "contentType": { "label": "HTML" }
+                    },
+                    "parameters": {
+                      "account": { "data": { "scoped": "true", "connection": "google" }, "label": "BuildRegs Support Google (support@buildregs.co.uk)" },
+                      "saveAfterSent": { "label": "No" }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "flow": [
+              {
+                "id": 6,
+                "module": "email:ActionSendEmail",
+                "version": 6,
+                "mapper": {
+                  "cc": [],
+                  "to": ["projects@buildregs.co.uk"],
+                  "bcc": [],
+                  "from": "",
+                  "html": "A new project has been paid for and is ready to start.<br><br>Client: {{8.payerEmail}}<br>Project type: {{1.data.object.metadata.project_type}}<br>Reference: {{1.data.object.metadata.project_ref}}<br>Final price: &pound;{{1.data.object.metadata.final_price}}<br><br>Please begin the work and upload completed files to the client's Drive folder.",
+                  "sender": "",
+                  "headers": [],
+                  "replyTo": "",
+                  "subject": "New paid project ready - {{1.data.object.metadata.project_ref}}",
+                  "priority": "normal",
+                  "inReplyTo": "",
+                  "references": [],
+                  "attachments": [],
+                  "contentType": "html"
+                },
+                "parameters": { "account": 10482851, "saveAfterSent": false },
+                "metadata": {
+                  "designer": { "x": 1524, "y": 164, "name": "4b. Notify team: start project" },
+                  "restore": {
+                    "expect": {
+                      "cc": { "mode": "chose" },
+                      "to": { "mode": "chose", "items": [null] },
+                      "bcc": { "mode": "chose" },
+                      "priority": { "label": "Normal" },
+                      "references": { "mode": "chose" },
+                      "attachments": { "mode": "chose" },
+                      "contentType": { "label": "HTML" }
+                    },
+                    "parameters": {
+                      "account": { "data": { "scoped": "true", "connection": "google" }, "label": "BuildRegs Support Google (support@buildregs.co.uk)" },
+                      "saveAfterSent": { "label": "No" }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
