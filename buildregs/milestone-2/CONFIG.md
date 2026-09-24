@@ -59,3 +59,28 @@ passes the guard, landing on the "Not received" wording as designed.
 Make cannot roll back a created Drive folder, a sent email or a posted CRM
 record. `builtin:Rollback` only covers transactional modules, which these are
 not. Preventing the run is the fix; undoing it is not available.
+
+---
+
+## Guard filter corrected 2026-09-24
+
+The first version of the guard used Make's `exist` operator on `1.email` and
+`1.__submission.serial_number`. A live submission carrying a valid email and
+serial number 49 was still blocked, stopping the run after one operation, so
+those conditions do not evaluate the way the blueprint API accepts them.
+
+The guard now uses a single condition: `1.email` contains `@`. An empty or
+malformed email fails it, which is the case that was creating junk folders;
+a real address passes. `text:contains` is the operator family already proven
+to work elsewhere in these scenarios.
+
+Rather than blocking on a missing serial number, the reference now degrades
+gracefully: `ifempty(__submission.serial_number; __submission.id)`. A missing
+serial can no longer produce a truncated `BR-<date>-` folder name, and it no
+longer stops a legitimate enquiry.
+
+Module 5's `4.fileSize > 0` filter, which used the `number:greater` operator
+and was never exercised, has been replaced by a filter on module 4: proceed
+only when `1.file-upload[]` contains `http`. This guards on whether the
+customer supplied a file at all, which is the meaningful question, and keeps
+every filter in the scenario on the one operator family known to work.
