@@ -1,24 +1,51 @@
 {
-  "_comment_1": "Phase 3 (Payment & Assignment) module 3 — http:ActionSendData, POST to",
-  "_comment_2": "https://buildregs.co.uk/wp-json/fluent-crm/v2/subscribers",
-  "_comment_3": "Content-Type: application/json  (set via the Content-type DROPDOWN only — do not",
-  "_comment_4": "add a manual Content-Type header as well, or you get rest_invalid_json).",
-  "_comment_5": "Keep the Resume error handler on this module: if the CRM write fails the",
-  "_comment_6": "confirmation and team emails must still go out.",
-  "_comment_7": "If your existing module nests custom fields under \"custom_values\", keep that",
-  "_comment_8": "nesting and simply add the new audit keys inside it. Remove all _comment_* keys.",
+  "_comment_1": "The live CRM request bodies as deployed on 2026-09-24, aligned to the",
+  "_comment_2": "actual FluentCRM custom-field schema. FluentCRM silently discards custom",
+  "_comment_3": "values whose keys are not already defined, and rejects human-readable",
+  "_comment_4": "strings sent into date-typed fields, so key names and types must match.",
+  "_comment_5": "Content-Type is set by the module's dropdown only; a second manual header",
+  "_comment_6": "produces rest_invalid_json. Both modules keep a Resume error handler so a",
+  "_comment_7": "CRM failure can never stop the emails.",
 
-  "email": "{{20.payerEmail}}",
-  "__force_update": true,
+  "phase_1_intake_module_6": {
+    "email": "{{1.email}}",
+    "first_name": "{{1.names.first_name}}",
+    "last_name": "{{1.names.last_name}}",
+    "phone": "{{1.phone}}",
+    "status": "subscribed",
+    "__force_update": true,
+    "custom_values": {
+      "project_reference": "{{2.projectRef}}",
+      "project_type": "{{1.dropdown}}",
+      "enquiry_date": "{{formatDate(now; \"YYYY-MM-DD HH:mm:ss\"; \"Europe/London\")}}"
+    }
+  },
 
-  "quote_status": "Paid",
-  "payment_date": "{{20.paymentDate}}",
+  "phase_3_payment_module_3": {
+    "email": "{{8.payerEmail}}",
+    "status": "subscribed",
+    "__force_update": true,
+    "custom_values": {
+      "quote_status": "Paid",
+      "payment_date": "{{8.paymentDateIso}}",
+      "project_reference": "{{8.projectRef}}",
+      "project_type": "{{8.projectType}}",
+      "stripe_payment_id": "{{8.paymentRef}}",
+      "stripe_session_id": "{{8.stripeSessionId}}",
+      "amount_paid": "{{8.amountPaidRaw}}",
+      "payment_currency": "{{8.currency}}",
+      "terms_version": "{{8.termsVersion}}",
+      "terms_accepted_at": "{{8.paymentDateIso}}"
+    }
+  },
 
-  "project_ref": "{{20.projectRef}}",
-  "stripe_payment_id": "{{20.paymentRef}}",
-  "stripe_session_id": "{{20.stripeSessionId}}",
-  "amount_paid": "{{20.amountPaid}}",
-  "payment_currency": "{{upper(1.data.object.currency)}}",
-  "terms_version": "{{20.termsVersion}}",
-  "terms_accepted_at": "{{20.paymentDate}}"
+  "_schema_notes": {
+    "project_reference": "text. Pre-existing. I had wrongly invented project_ref.",
+    "payment_date": "date. Pre-existing. Needs YYYY-MM-DD HH:mm:ss, not the readable form.",
+    "quote_status": "radio. Pre-existing. The value must match a defined option or it is ignored. Options not yet confirmed.",
+    "enquiry_date": "date. Pre-existing and previously unused; Phase 1 now fills it.",
+    "amount_paid": "number. Created 2026-09-24. Receives the bare value, e.g. 849, while the email shows £849.00.",
+    "created_2026_09_24": ["project_type", "stripe_payment_id", "stripe_session_id", "amount_paid", "payment_currency", "terms_version", "terms_accepted_at"],
+    "phase_1_no_longer_writes_quote_status": "With __force_update set, a repeat enquiry from a customer who had already paid would have reset their status from Paid back to Enquiry received. Quote status belongs to the quoting and payment stages only."
+  }
 }
