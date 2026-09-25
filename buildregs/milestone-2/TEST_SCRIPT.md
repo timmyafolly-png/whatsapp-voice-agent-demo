@@ -39,7 +39,7 @@ regardless of active state and has hidden problems before.
 | A3 | Inside that folder | Your file, named `loft-plans-TEST.pdf` or close to it. **Not** `file.txt` |
 | A4 | FluentCRM, Contacts | The contact exists **with first and last name filled in**. This is the one that has never worked. Open it and confirm the custom fields `project_ref`, `project_type` and `quote_status` carry values |
 | A5 | Your inbox | Branded acknowledgement. Greeting shows your actual first name, not `Hi ,`. Reference matches A2. Project type shown. A row reading "Your plans: Received" |
-| A6 | projects@buildregs.co.uk | Team notice. No stray ` / / ` where the old UTM fields were. Space between first and last name in the subject. Folder link opens the right folder |
+| A6 | support@buildregs.co.uk | Team notice. No stray ` / / ` where the old UTM fields were. Space between first and last name in the subject. Folder link opens the right folder |
 
 **Then the negative case.** Submit again with **no file attached**. Expect:
 the run still completes green, and the acknowledgement now reads
@@ -63,7 +63,7 @@ test link with card `4242 4242 4242 4242`, any future expiry, any CVC.
 | B2 | Customer inbox | Branded receipt. Greeting uses the name entered at Stripe checkout, not `Hi,`. **Amount matches what Stripe actually charged** |
 | B3 | Same email | "Date" shows a real date and time such as `23 September 2026, 14:07`. If it is blank or nonsense, see Risk 2 below |
 | B4 | FluentCRM contact | `quote_status` = Paid, plus `project_ref`, `stripe_payment_id`, `stripe_session_id`, `amount_paid`, `payment_currency`, `terms_version` = 2026-09, `terms_accepted_at`. **If any are missing, see Risk 1** |
-| B5 | projects@buildregs.co.uk | High-priority "NEW PAID JOB" notice with amount, payment intent, checkout session and a working Projects folder link |
+| B5 | support@buildregs.co.uk | High-priority "NEW PAID JOB" notice with amount, payment intent, checkout session and a working Projects folder link |
 
 ---
 
@@ -104,7 +104,7 @@ text. That is enough to diagnose and fix without guessing.
 ## Still outstanding regardless of the result
 
 - The real "new paid job" team inbox. Still the placeholder
-  `projects@buildregs.co.uk` pending Sandeep's decision.
+  `support@buildregs.co.uk` pending Sandeep's decision.
 - The hosted logo URL. Templates currently render a text wordmark.
 - Multi-file uploads. Only the first file is kept; fixing it needs an
   Iterator and a router restructure. Proposed for Milestone 3.

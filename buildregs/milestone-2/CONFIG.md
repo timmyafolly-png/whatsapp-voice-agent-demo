@@ -5,7 +5,7 @@ Decisions taken 2026-09-23. Anything marked DEFERRED is a conscious
 
 | # | Constant | Used in | Value | Status |
 |---|---|---|---|---|
-| 1 | `TEAM_INBOX` | Phase 3 branch 4b | `projects@buildregs.co.uk` | **DEFERRED.** Client has not confirmed the real "new paid job" inbox. Shipping on the placeholder. One-field change when Sandeep decides. |
+| 1 | `TEAM_INBOX` | Phase 3 branch 4b | `support@buildregs.co.uk` | **DEFERRED.** Client has not confirmed the real "new paid job" inbox. Shipping on the placeholder. One-field change when Sandeep decides. |
 | 2 | `TERMS_VERSION` | Phase 3 module 3 audit body | `2026-09` | **DECIDED.** Date stamp of the terms in force when the payment was taken. Bump this string whenever the T&Cs are revised, so every historic payment still points at the wording that was actually agreed. |
 | 3 | `LOGO_URL` | all three email templates | *(none yet)* | **OPEN.** No hosted URL available. Templates ship with a styled text wordmark instead of a broken image. Source asset confirmed good: 1024x227 PNG, RGBA, transparent. Get the URL from WordPress admin, Media, the logo file, File URL field. |
 | 4 | WordPress app password | Phase 1 module 6, Phase 3 module 3 | unchanged | **DEFERRED.** Stays inline in both blueprints for now. Still recommended: move it to a Make connection and rotate it, since it has already left Make in exported artifacts. Redacted from the git backups regardless. |
@@ -84,3 +84,22 @@ and was never exercised, has been replaced by a filter on module 4: proceed
 only when `1.file-upload[]` contains `http`. This guards on whether the
 customer supplied a file at all, which is the meaningful question, and keeps
 every filter in the scenario on the one operator family known to work.
+
+---
+
+## Client decisions received 2026-09-25
+
+Sandeep supplied the hosted logo and the real team inbox, closing two
+deferred items.
+
+**Logo.** `https://buildregs.co.uk/wp-content/uploads/2025/11/BuildRegs-Black-1024x227.png`
+The dark wordmark, 1024x227, matching the source asset's own dimensions, so
+it is full size rather than a downscale. Now live in both customer-facing
+emails in place of the text wordmark. The internal team notice keeps its
+navy header bar and no image: a dark logo would be invisible there.
+
+**Team inbox.** Changed from the `projects@` placeholder to
+`support@buildregs.co.uk` in both scenarios, Phase 1 module 7b and Phase 3
+module 4b. Note this is also the sending account, so the notices now arrive
+in the same mailbox they are sent from. That is what was asked for and it
+works, but it is worth watching that they are not filtered as self-sent.
