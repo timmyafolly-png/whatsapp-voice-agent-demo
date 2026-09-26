@@ -58,3 +58,36 @@ and the customer always gets an acknowledgement, correctly worded either way.
 New to the automation: Fluent Forms never carried this field. It now appears in
 the acknowledgement email, the team email, and on the contact record as
 FluentCRM's native `address_line_1`, so no custom field was needed.
+
+---
+
+## Direct job-folder link in the paid-job email
+
+Sandeep reported that the button in the paid-job notice opened the general
+Projects directory rather than the individual job, and that he could not find
+the quoted reference in the list.
+
+Two separate causes. The folder is created at enquiry time by Phase 1, which
+Phase 3 has never seen. And the two reference series do not match: intake
+produces `BR-<date>-<time>` while the quote produces `BR-Q-<date>-<serial>`,
+so nothing in the payment payload can identify the folder by name.
+
+The reference he could not find, `BR-Q-20260925-9010`, had no folder at all.
+It came from a simulated payment pushed directly at the payment webhook with
+no enquiry before it, so nothing was ever created. Confirmed by searching
+Drive directly: no folder of that name, and none created in Projects that day.
+
+The fix links the two stages by the client's email address, which is the only
+value both stages reliably share:
+
+- Phase 1 writes the new folder's link to the contact's `drive_folder_url`
+- Phase 3 looks the contact up by email and points the button at it
+
+The lookup falls back to the Projects root if it returns nothing, so the worst
+case is the previous behaviour rather than a broken link. The button label
+changes with it, reading "Open this job's folder" when a specific folder was
+found and "Open Projects folder" when it was not, so the team can tell at a
+glance which they are getting. The URL is also printed beneath the button in
+case the button is stripped by a mail client.
+
+Phase 3 now costs 7 operations per payment rather than 5.
