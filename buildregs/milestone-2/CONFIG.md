@@ -103,3 +103,26 @@ navy header bar and no image: a dark logo would be invisible there.
 module 4b. Note this is also the sending account, so the notices now arrive
 in the same mailbox they are sent from. That is what was asked for and it
 works, but it is worth watching that they are not filtered as self-sent.
+
+## Old Fluent Forms webhook feed — left in place (27 Sep 2026)
+
+The enquiry form was moved from Fluent Forms to Forminator, but the old Fluent
+Forms webhook feed pointing at the Phase 1 hook was not disabled.
+
+Decision (Collins): leave it. All live traffic reaches the Forminator form on the
+landing page, so the Fluent Forms version is not publicly submittable and the feed
+cannot fire.
+
+This is accepted as dormant rather than fixed. If that form is ever embedded on a
+public page again, every enquiry through it would process twice — two folders, two
+acknowledgement emails to the customer, two team alerts — with nothing in Make
+indicating why. Disabling the feed is a single toggle under Fluent Forms ->
+(the old enquiry form) -> Settings & Integrations -> Marketing & CRM Integrations,
+and is worth doing opportunistically.
+
+Which webhook is which:
+
+| Hook URL ends | Scenario | Correct source |
+| --- | --- | --- |
+| `...au2y1gg4ki8u41w1zl6faw84is8mixuf` | 7129360 Phase 1 Intake | Forminator only |
+| `...17mavo7znmwtdbrw99dgy9lcsg4o2wo7` | 7229882 Phase 2 Quote Builder | Fluent Forms — keep |
