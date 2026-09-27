@@ -280,11 +280,28 @@ The `TEMPORARY HOLD` filter came off module 8 at 17:53 UTC, immediately after th
 above was verified. Client acknowledgement emails are live again. Scenario 7129360
 remains active.
 
-## Not verified from here
+## CRM record confirmed
 
-The FluentCRM record for this enquiry could not be read directly — outbound
-requests to buildregs.co.uk are blocked by this environment's network policy.
-The indirect evidence is that module 6 completed and its `Resume` error handler
-did not fire, which means the API returned a 2xx. The fields themselves
-(`project_reference`, `project_type`, `enquiry_date`, `drive_folder_url`) should
-be eyeballed on the contact in FluentCRM before handover.
+Outbound requests to buildregs.co.uk are blocked by this environment's network
+policy, so the record was checked by hand in FluentCRM. All four fields wrote,
+and all four agree with what was observed in Drive:
+
+| Field | Value |
+| --- | --- |
+| Project Reference | `BR-20260927-184851` — matches the folder name |
+| Enquiry Date | `2026-09-27` |
+| Project Type | `Other` — matches `select_1` in the payload |
+| drive folder url | `.../folders/1uRg6yadeZO31plpi-s9Q6mSitKejtFRU` — matches the folder id |
+
+Intake is therefore verified end to end on real client data: webhook payload ->
+project reference -> Drive folder -> three PDFs -> CRM record, all consistent.
+
+### What this narrows about the folder-link bug
+
+The client's complaint is that the folder link in the assignment email opens the
+Projects root rather than the individual project folder. This record shows Phase 1
+stores the correct per-client URL in `drive_folder_url`. The defect is therefore
+in Phase 3 reading that value back, not in Phase 1 writing it — the lookup path
+`30.data.subscribers.data[1].custom_values.drive_folder_url` is the only thing at
+fault, and it falls back to the root when it resolves to nothing. That is a
+smaller fix than a redesign, and it is testable the same way this one was.
