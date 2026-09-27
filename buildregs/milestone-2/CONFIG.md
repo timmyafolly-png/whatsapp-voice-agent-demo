@@ -126,3 +126,24 @@ Which webhook is which:
 | --- | --- | --- |
 | `...au2y1gg4ki8u41w1zl6faw84is8mixuf` | 7129360 Phase 1 Intake | Forminator only |
 | `...17mavo7znmwtdbrw99dgy9lcsg4o2wo7` | 7229882 Phase 2 Quote Builder | Fluent Forms — keep |
+
+## Test folders removed from the client's Drive (27 Sep 2026)
+
+Each was opened and its contents checked before removal. None held client data.
+
+| Folder | Contents | Origin |
+| --- | --- | --- |
+| `BR-20260907-collsdigital@gmail.com` | `file.txt` | early intake test |
+| `BR-20260924-51` | empty | the run that exposed the filter-blocks-the-chain bug |
+| `BR-20260924-52` | `ff-...-loft-plans-TEST.pdf`, 2,050 bytes | hand-built test fixture |
+| `BR-20260926-064527` | `Ntbxkjuf2Z0L-ChatGPT-Image-Sep-18-2026-...png` | Forminator remap test |
+
+Moved to Drive trash, so they are recoverable for 30 days rather than destroyed.
+
+The Projects folder now contains exactly one folder, `BR-20260927-184851`, which is
+the recovered genuine enquiry. Earlier `ZZTEST-*` harness folders were removed the
+same way on the same day.
+
+Still outstanding for handover: every folder here, including the genuine one, is
+owned by `collsdigital@gmail.com`. Ownership transfer to the client is a separate
+task requiring the client present.
