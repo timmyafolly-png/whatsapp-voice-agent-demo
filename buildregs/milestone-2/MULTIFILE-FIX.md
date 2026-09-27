@@ -39,8 +39,8 @@ Module by module:
 | Module | Change |
 | --- | --- |
 | 40 (new) | Iterator over `{{split(1.upload_1; ",")}}` — one bundle per uploaded file. Route filter `length(trim(ifempty(1.upload_1; ""))) > 0` so the branch is skipped when nothing was uploaded. |
-| 4 Download | `url` is now `{{trim(40.value)}}` — this iteration's URL, whitespace stripped (Forminator can emit `", "` between URLs). Error handler changed `Resume` -> `Ignore`. |
-| 5 Upload | `filename` is now `{{ifempty(last(split(trim(40.value); "/")); 4.fileName)}}`. Error handler changed `Resume` -> `Ignore`. |
+| 4 Download | `url` is now `{{trim(40.value)}}` — this iteration's URL, whitespace stripped (Forminator can emit `", "` between URLs). Error handler changed `Resume` -> `Ignore`, and `handleErrors` turned **on** (see "What the test caught"). |
+| 5 Upload | `filename` is now `{{ifempty(last(split(trim(40.value); "/")); 4.fileName)}}`. Error handler changed `Resume` -> `Ignore`, plus a filter `4.fileSize > 0` as a second guard. |
 | 20 Email fields | Moved ahead of the CRM call. `filesStatus` / `filesBlock` now derive from the webhook payload instead of `4.fileSize`, and a new `fileCount` variable is added. |
 | 7 Router | Gains a third branch, ordered files-first so uploads land before the emails go out. |
 
@@ -89,3 +89,99 @@ Expected result:
   file branch
 
 Delete scenario 7636164 and its `ZZTEST-...` Drive folder once the fix is signed off.
+
+
+## What the test caught
+
+The first test run came back `SUCCESS` with 12 operations, and two of the three
+files were correct. The third was not, and nothing in Make said so:
+
+| File | Size | MIME type |
+| --- | --- | --- |
+| `BuildRegs-Black-1024x227.png` | 14,897 | `image/png` |
+| `BuildRegs-White-1536x340.png` | 23,418 | `image/png` |
+| `zz-does-not-exist-9999.png` | 117,959 | **`text/html`** |
+
+The 404 URL was saved anyway — WordPress's 404 *page* written into the client's
+folder under a `.png` name. The `Ignore` handler never fired, because
+`http:ActionGetFile` with `handleErrors: false` counts any completed HTTP
+response as a successful download, 404 included.
+
+Two changes fix it:
+
+1. `handleErrors: true` on module 4, so a non-2xx/3xx status is raised as an
+   error and the `Ignore` handler actually skips that file.
+2. A filter `{{4.fileSize}} > 0` on module 5, so nothing empty is ever uploaded
+   even if a server returns 200 with no body.
+
+This is the reason the run had to be observed in Drive rather than trusted from
+the execution status. A green run with the right operation count still put junk
+in the client's folder.
+
+## Test evidence
+
+All three runs on scenario 7636164, 27 Sep 2026.
+
+| Execution | Payload | Operations | Result |
+| --- | --- | --- | --- |
+| `c24e367c72bd4acb9ce6dd27393713df` | 3 URLs, one 404 | 12 | 2 files correct, **404 saved as 118 KB HTML** — bug found |
+| `df3f810b978249cda140c6d1d5fe5f41` | same, after the two fixes | 11 | 2 files correct, 404 skipped |
+| `b81b82d77e4b4b3d8bd36ab760190470` | `upload_1` empty | 5 | folder created, no files, no errors |
+
+Observed in Drive after run 2 (`ZZTEST-20260927-092941`):
+
+- `BuildRegs-Black-1024x227.png` — 14,300 bytes, `image/png`
+- `BuildRegs-White-1536x340.png` — 23,418 bytes, `image/png`
+- no third file
+- `PROOF status=Received count=3 greet=Hi Zed,`
+
+Observed after run 3 (`ZZTEST-NOFILES-093055`):
+
+- no files
+- `PROOF status=NOT RECEIVED count=0 greet=Hi Zed,`
+
+The `PROOF ...` folder is module 30 in the harness, a Drive folder named from
+`20.filesStatus`, `20.fileCount` and `20.greetingName`. Module outputs are not
+readable through the API, so the values were written into a folder name to make
+them observable. Its presence in both runs is also the proof that the non-file
+branches are not blocked by the file branch — the `BR-20260924-51` failure.
+
+What run 2 proves specifically:
+
+- `split` produced 3 items from one comma-separated string — the actual bug
+- `trim` handled the `", "` before the second URL, since a leading space would
+  have made that download fail
+- the filename expression read the name off each iteration's own URL
+- byte sizes match the source files, so real content arrived, not empty bundles
+
+## Deployed
+
+Pushed to live scenario **7129360** on 27 Sep 2026 08:32 UTC. Read back from the
+API afterwards and confirmed stored: iterator with its branch filter, module 4
+`handleErrors: true` with `Ignore`, module 5 filter with `Ignore`, module 20 with
+`fileCount`, three router branches, CRM credential and webhook binding intact,
+`isinvalid: false`.
+
+Phase 1 is deployed but left **switched off**. See the note on the queued
+enquiry below.
+
+## The queued enquiry
+
+Webhook 3611527 still holds one unprocessed payload, `8fbea82d351eb49ef37d6faa9f5f6462`,
+1,690 bytes, received 2026-09-26T07:47:04Z — the genuine enquiry from Waheed Ahmed.
+Switching Phase 1 on releases it immediately through whatever is live at that
+moment, which is why the fix went in first.
+
+The client has asked that recovering it must not send a duplicate acknowledgement.
+It can be released without emailing him by putting a temporary blocking filter on
+module 8 (the client email branch) only: he then gets his folder, his CRM record
+and the team notification to `support@`, with no email to him. The filter comes
+straight back off afterwards. This needs the client's confirmation of whether he
+was already replied to by hand.
+
+## Cleanup done
+
+Test folders trashed from the client's Drive: `ZZTEST-20260927-092214`,
+`ZZTEST-20260927-092320`, `ZZTEST-20260927-092941`, `ZZTEST-NOFILES-093055`.
+Scenario 7636164 deactivated (it was on a 15-minute schedule) and kept for
+re-testing; delete it at handover.

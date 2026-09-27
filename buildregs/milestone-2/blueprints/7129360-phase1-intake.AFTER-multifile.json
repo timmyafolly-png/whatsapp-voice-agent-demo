@@ -308,7 +308,7 @@
                 }
               },
               "parameters": {
-                "handleErrors": false
+                "handleErrors": true
               }
             },
             {
@@ -363,6 +363,18 @@
               },
               "parameters": {
                 "__IMTCONN__": 10263365
+              },
+              "filter": {
+                "name": "Guard: a real file came back",
+                "conditions": [
+                  [
+                    {
+                      "a": "{{4.fileSize}}",
+                      "o": "number:greater",
+                      "b": "0"
+                    }
+                  ]
+                ]
               }
             }
           ]
