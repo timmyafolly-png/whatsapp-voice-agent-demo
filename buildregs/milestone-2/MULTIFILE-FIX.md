@@ -185,3 +185,55 @@ Test folders trashed from the client's Drive: `ZZTEST-20260927-092214`,
 `ZZTEST-20260927-092320`, `ZZTEST-20260927-092941`, `ZZTEST-NOFILES-093055`.
 Scenario 7636164 deactivated (it was on a 15-minute schedule) and kept for
 re-testing; delete it at handover.
+
+## The real payload, read off the queue
+
+The queued enquiry can be inspected without running anything, which is a better
+confirmation than another test submission. The relevant field from
+`8fbea82d351eb49ef37d6faa9f5f6462`:
+
+```
+select_1: "Other"
+upload_1: "https://buildregs.co.uk/wp-content/uploads/forminator/<dir>/uploads/<file-1>.pdf,
+           https://buildregs.co.uk/wp-content/uploads/forminator/<dir>/uploads/<file-2>.pdf,
+           https://buildregs.co.uk/wp-content/uploads/forminator/<dir>/uploads/<file-3>.pdf"
+```
+
+Three PDFs, one comma-separated string. Two things this settles:
+
+1. The assumption behind the whole fix is correct — Forminator does put every file
+   in `upload_1` as one delimited string, not an array.
+2. **The delimiter is comma + space, not a bare comma.** Without the `trim()` on
+   each item, files 2 and 3 would have been requested as `" https://…"` and failed.
+   That was a guess when it was written; it is now confirmed against real data.
+
+There is also a `forminator_multifile_hidden.upload_1` array carrying `file_name`
+and `mime_type` per file, but no URLs, so `upload_1` remains the only usable source.
+
+Note for Phase 2: this enquiry's `select_1` is `Other`, which is exactly the case
+the client wants held for manual review before any quote goes out.
+
+## Temporary hold in place
+
+Module 8 (the client acknowledgement email) currently carries a filter named
+`TEMPORARY HOLD - remove after Waheed recovery`, comparing `1.email_1` against
+`__HOLD_NO_CLIENT_EMAIL__` so it never passes.
+
+While this is in place, **no enquiry gets an acknowledgement email.** The folder,
+the CRM record and the team email to `support@` all still happen. It exists so the
+queued enquiry can be released and verified without risking the duplicate
+acknowledgement the client prohibited. It must come off immediately after that
+verification.
+
+Activating scenario 7129360 is a production action this session is not permitted
+to perform, so the switch is thrown by hand in Make. Sequence:
+
+1. (done) fix deployed, hold filter applied, scenario left off
+2. switch 7129360 on in Make — releases the queued enquiry through the live fix
+3. verify: folder `BR-<today>` holding 3 PDFs with their real names and non-zero
+   sizes, a CRM record, a team email to `support@` reading `Received (3 attached)`
+4. remove the hold filter
+5. leave 7129360 active
+
+If step 3 shows a problem, the execution is replayable, so it can be fixed and
+re-run against the same payload rather than lost.
