@@ -1,0 +1,526 @@
+{
+  "flow": [
+    {
+      "id": 1,
+      "mapper": {},
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "metadata": {
+        "restore": {
+          "parameters": {
+            "hook": {
+              "data": {
+                "editable": "true"
+              },
+              "label": "BuildRegs Enquiry"
+            }
+          }
+        },
+        "designer": {
+          "x": 0,
+          "y": 300,
+          "name": "1. New Enquiry (Forminator webhook)"
+        }
+      },
+      "parameters": {
+        "hook": 3611527,
+        "maxResults": 1
+      }
+    },
+    {
+      "id": 2,
+      "filter": {
+        "name": "Guard: valid email present",
+        "conditions": [
+          [
+            {
+              "a": "{{1.email_1}}",
+              "o": "exist"
+            }
+          ]
+        ]
+      },
+      "mapper": {
+        "name": "projectRef",
+        "scope": "roundtrip",
+        "value": "BR-{{formatDate(now; \"YYYYMMDD-HHmmss\"; \"Europe/London\")}}"
+      },
+      "module": "util:SetVariable2",
+      "version": 1,
+      "metadata": {
+        "restore": {
+          "expect": {
+            "scope": {
+              "label": "One cycle"
+            }
+          }
+        },
+        "designer": {
+          "x": 300,
+          "y": 300,
+          "name": "2. Generate Project Ref"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 3,
+      "mapper": {
+        "name": "{{2.projectRef}}",
+        "shared": false,
+        "folderId": "1XQGcexK1EA7COStPHEGSu7W6JmS_Gw8f",
+        "destination": "drive"
+      },
+      "module": "google-drive:createAFolder",
+      "version": 4,
+      "metadata": {
+        "restore": {
+          "expect": {
+            "folderId": {
+              "mode": "edit",
+              "path": [
+                "BuildRegs - Operations"
+              ]
+            },
+            "destination": {
+              "label": "My Drive"
+            }
+          },
+          "parameters": {
+            "__IMTCONN__": {
+              "data": {
+                "scoped": "true",
+                "connection": "google-drive"
+              },
+              "label": "Collins's Google Drive connection (collsdigital@gmail.com)"
+            }
+          }
+        },
+        "designer": {
+          "x": 600,
+          "y": 300,
+          "name": "3. Create client project folder"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 10263365
+      }
+    },
+    {
+      "id": 4,
+      "mapper": {
+        "url": "{{1.upload_1}}",
+        "method": "get",
+        "serializeUrl": false,
+        "shareCookies": false
+      },
+      "module": "http:ActionGetFile",
+      "onerror": [
+        {
+          "id": 11,
+          "mapper": {},
+          "module": "builtin:Resume",
+          "version": 1,
+          "metadata": {
+            "restore": {},
+            "designer": {
+              "x": 900,
+              "y": 600
+            }
+          },
+          "parameters": {}
+        }
+      ],
+      "version": 3,
+      "metadata": {
+        "restore": {},
+        "designer": {
+          "x": 900,
+          "y": 300,
+          "name": "4. Download uploaded client file"
+        }
+      },
+      "parameters": {
+        "handleErrors": false
+      }
+    },
+    {
+      "id": 5,
+      "mapper": {
+        "data": "{{4.data}}",
+        "select": "map",
+        "convert": false,
+        "filename": "{{ifempty(last(split(1.upload_1; \"/\")); 4.fileName)}}",
+        "folderId": "{{3.id}}"
+      },
+      "module": "google-drive:uploadAFile",
+      "onerror": [
+        {
+          "id": 12,
+          "mapper": {},
+          "module": "builtin:Resume",
+          "version": 1,
+          "metadata": {
+            "restore": {},
+            "designer": {
+              "x": 1200,
+              "y": 600
+            }
+          },
+          "parameters": {}
+        }
+      ],
+      "version": 4,
+      "metadata": {
+        "restore": {
+          "expect": {
+            "select": {
+              "label": "Enter manually"
+            }
+          },
+          "parameters": {
+            "__IMTCONN__": {
+              "data": {
+                "scoped": "true",
+                "connection": "google-drive"
+              },
+              "label": "Collins's Google Drive connection (collsdigital@gmail.com)"
+            }
+          }
+        },
+        "designer": {
+          "x": 1200,
+          "y": 300,
+          "name": "5. Upload file into project folder"
+        }
+      },
+      "parameters": {
+        "__IMTCONN__": 10263365
+      }
+    },
+    {
+      "id": 6,
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "https://buildregs.co.uk/wp-json/fluent-crm/v2/subscribers",
+        "data": "{\n  \"email\": \"{{1.email_1}}\",\n  \"first_name\": \"{{1.name_1_first_name}}\",\n  \"last_name\": \"{{1.name_1_last_name}}\",\n  \"status\": \"subscribed\",\n  \"__force_update\": true,\n  \"address_line_1\": \"{{1.address_1_street_address}}\",\n  \"custom_values\": {\n    \"project_reference\": \"{{2.projectRef}}\",\n    \"project_type\": \"{{1.select_1}}\",\n    \"enquiry_date\": \"{{formatDate(now; \"YYYY-MM-DD HH:mm:ss\"; \"Europe/London\")}}\",\n    \"drive_folder_url\": \"{{3.webViewLink}}\"\n  }\n}",
+        "gzip": false,
+        "method": "post",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "__REDACTED_BASIC_AUTH__"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": true,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "module": "http:ActionSendData",
+      "onerror": [
+        {
+          "id": 10,
+          "mapper": {},
+          "module": "builtin:Resume",
+          "version": 1,
+          "metadata": {
+            "restore": {},
+            "designer": {
+              "x": 1500,
+              "y": 600
+            }
+          },
+          "parameters": {}
+        }
+      ],
+      "version": 3,
+      "metadata": {
+        "restore": {
+          "expect": {
+            "qs": {
+              "mode": "chose"
+            },
+            "method": {
+              "mode": "chose",
+              "label": "POST"
+            },
+            "headers": {
+              "mode": "chose",
+              "items": [
+                null
+              ]
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "advanced": true,
+        "designer": {
+          "x": 1500,
+          "y": 300,
+          "name": "6. Create contact in FluentCRM"
+        }
+      },
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      }
+    },
+    {
+      "id": 20,
+      "mapper": {
+        "scope": "roundtrip",
+        "variables": [
+          {
+            "name": "greetingName",
+            "value": "{{if(length(trim(1.name_1_first_name)) > 0; \"Hi \" + trim(1.name_1_first_name) + \",\"; \"Hello,\")}}"
+          },
+          {
+            "name": "filesStatus",
+            "value": "{{if(ifempty(4.fileSize; 0) > 0; \"Received\"; \"NOT RECEIVED\")}}"
+          },
+          {
+            "name": "addressPlain",
+            "value": "{{ifempty(1.address_1_street_address; \"(not supplied)\")}}"
+          },
+          {
+            "name": "filesBlock",
+            "value": "{{if(ifempty(4.fileSize; 0) > 0; \"<tr><td style='padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88;'>Your plans</td><td style='padding:0 0 10px 0; font-size:15px; line-height:20px; color:#1E7A4B; font-weight:600;'>Received</td></tr>\"; \"<tr><td style='padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88;'>Your plans</td><td style='padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;'>Not received &mdash; please reply to this email with your files</td></tr>\")}}"
+          },
+          {
+            "name": "addressBlock",
+            "value": "{{if(length(trim(ifempty(1.address_1_street_address; \"\"))) > 0; \"<tr><td style='padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88;'>Property</td><td style='padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;'>\" + trim(1.address_1_street_address) + \"</td></tr>\"; \"\")}}"
+          }
+        ]
+      },
+      "module": "util:SetVariables",
+      "version": 1,
+      "metadata": {
+        "restore": {
+          "expect": {
+            "scope": {
+              "label": "One cycle"
+            }
+          }
+        },
+        "designer": {
+          "x": 1800,
+          "y": 300,
+          "name": "20. Build email fields"
+        }
+      },
+      "parameters": {}
+    },
+    {
+      "id": 7,
+      "mapper": null,
+      "module": "builtin:BasicRouter",
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 8,
+              "mapper": {
+                "cc": [],
+                "to": [
+                  "{{1.email_1}}"
+                ],
+                "bcc": [],
+                "from": "",
+                "html": "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F4F6F8;\">\n<tr><td align=\"center\" style=\"padding:24px 12px;\">\n<table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:600px; max-width:100%; background-color:#FFFFFF; border:1px solid #E3E8ED; border-radius:8px;\">\n<tr><td align=\"left\" style=\"padding:28px 32px 20px 32px; border-bottom:1px solid #E3E8ED;\">\n<img src=\"https://buildregs.co.uk/wp-content/uploads/2025/11/BuildRegs-Black-1024x227.png\" alt=\"BuildRegs\" width=\"170\" style=\"display:block; width:170px; max-width:170px; height:auto; border:0;\">\n</td></tr>\n<tr><td style=\"padding:32px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<h1 style=\"margin:0 0 16px 0; font-size:22px; line-height:30px; font-weight:600; color:#17324B;\">Thanks &mdash; we've received your enquiry</h1>\n<p style=\"margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;\">{{20.greetingName}}</p>\n<p style=\"margin:0 0 24px 0; font-size:15px; line-height:24px; color:#33414D;\">Thank you for getting in touch with BuildRegs. Your enquiry is with our technical team, who will review the details and prepare your quotation.</p>\n</td></tr>\n<tr><td style=\"padding:0 32px;\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;\">\n<tr><td style=\"padding:20px 24px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n<tr><td style=\"padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88; width:150px;\">Your reference</td><td style=\"padding:0 0 10px 0; font-size:15px; line-height:20px; color:#17324B; font-weight:600;\">{{2.projectRef}}</td></tr>\n{{20.addressBlock}}\n<tr><td style=\"padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88;\">Project type</td><td style=\"padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;\">{{1.select_1}}</td></tr>\n{{20.filesBlock}}\n</table>\n</td></tr>\n</table>\n</td></tr>\n<tr><td style=\"padding:28px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<h2 style=\"margin:0 0 14px 0; font-size:17px; line-height:24px; font-weight:600; color:#17324B;\">What happens next</h2>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n<tr><td valign=\"top\" style=\"padding:0 12px 12px 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600; width:20px;\">1</td><td style=\"padding:0 0 12px 0; font-size:15px; line-height:24px; color:#33414D;\">We review your plans and project details.</td></tr>\n<tr><td valign=\"top\" style=\"padding:0 12px 12px 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600;\">2</td><td style=\"padding:0 0 12px 0; font-size:15px; line-height:24px; color:#33414D;\">We send you a fixed-fee quotation setting out exactly what's included.</td></tr>\n<tr><td valign=\"top\" style=\"padding:0 12px 0 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600;\">3</td><td style=\"padding:0; font-size:15px; line-height:24px; color:#33414D;\">Once you're happy, you accept online and we begin your drawings.</td></tr>\n</table>\n</td></tr>\n<tr><td style=\"padding:24px 32px 32px 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<p style=\"margin:0 0 8px 0; font-size:15px; line-height:24px; color:#33414D;\">If anything about your project changes in the meantime, just reply to this email and quote your reference.</p>\n<p style=\"margin:0; font-size:15px; line-height:24px; color:#33414D;\">Kind regards,<br><span style=\"color:#17324B; font-weight:600;\">The BuildRegs Team</span></p>\n</td></tr>\n<tr><td style=\"padding:20px 32px 24px 32px; border-top:1px solid #E3E8ED; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<p style=\"margin:0; font-size:12px; line-height:19px; color:#6B7A88;\">BuildRegs &middot; Building Regulations drawings &amp; structural calculations<br><a href=\"https://buildregs.co.uk\" style=\"color:#17324B; text-decoration:underline;\">buildregs.co.uk</a> &nbsp;&middot;&nbsp; <a href=\"mailto:support@buildregs.co.uk\" style=\"color:#17324B; text-decoration:underline;\">support@buildregs.co.uk</a></p>\n</td></tr>\n</table>\n</td></tr>\n</table>",
+                "sender": "",
+                "headers": [],
+                "replyTo": "",
+                "subject": "We've received your enquiry - {{2.projectRef}}",
+                "priority": "normal",
+                "inReplyTo": "",
+                "references": [],
+                "attachments": [],
+                "contentType": "html"
+              },
+              "module": "email:ActionSendEmail",
+              "version": 6,
+              "metadata": {
+                "restore": {
+                  "expect": {
+                    "cc": {
+                      "mode": "chose"
+                    },
+                    "to": {
+                      "mode": "chose",
+                      "items": [
+                        null
+                      ]
+                    },
+                    "bcc": {
+                      "mode": "chose"
+                    },
+                    "priority": {
+                      "label": "Normal"
+                    },
+                    "references": {
+                      "mode": "chose"
+                    },
+                    "attachments": {
+                      "mode": "chose"
+                    },
+                    "contentType": {
+                      "label": "HTML"
+                    }
+                  },
+                  "parameters": {
+                    "account": {
+                      "data": {
+                        "scoped": "true",
+                        "connection": "google"
+                      },
+                      "label": "BuildRegs Support Google (support@buildregs.co.uk)"
+                    },
+                    "saveAfterSent": {
+                      "label": "No"
+                    }
+                  }
+                },
+                "designer": {
+                  "x": 2400,
+                  "y": 0,
+                  "name": "7a. Email client: enquiry received"
+                }
+              },
+              "parameters": {
+                "account": 10482851,
+                "saveAfterSent": false
+              }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 9,
+              "mapper": {
+                "cc": [],
+                "to": [
+                  "support@buildregs.co.uk"
+                ],
+                "bcc": [],
+                "from": "",
+                "html": "New enquiry received.<br><br>Ref: <strong>{{2.projectRef}}</strong><br>Name: {{1.name_1_first_name}} {{1.name_1_last_name}}<br>Email: {{1.email_1}}<br>Property: {{20.addressPlain}}<br>Project type: {{1.select_1}}<br>Files: <strong>{{20.filesStatus}}</strong> ({{20.fileCount}} attached)<br>Folder: <a href=\"{{3.webViewLink}}\">Open project folder</a><br>Consent: {{1.consent_1}} / {{1.consent_2}}<br><br>Description:<br>{{1.textarea_1}}<br><br>Action: review and send quote.",
+                "sender": "",
+                "headers": [],
+                "replyTo": "",
+                "subject": "New BuildRegs enquiry: {{2.projectRef}} - {{1.name_1_first_name}} {{1.name_1_last_name}}",
+                "priority": "normal",
+                "inReplyTo": "",
+                "references": [],
+                "attachments": [],
+                "contentType": "html"
+              },
+              "module": "email:ActionSendEmail",
+              "version": 6,
+              "metadata": {
+                "restore": {
+                  "expect": {
+                    "cc": {
+                      "mode": "chose"
+                    },
+                    "to": {
+                      "mode": "chose",
+                      "items": [
+                        null
+                      ]
+                    },
+                    "bcc": {
+                      "mode": "chose"
+                    },
+                    "priority": {
+                      "label": "Normal"
+                    },
+                    "references": {
+                      "mode": "chose"
+                    },
+                    "attachments": {
+                      "mode": "chose"
+                    },
+                    "contentType": {
+                      "label": "HTML"
+                    }
+                  },
+                  "parameters": {
+                    "account": {
+                      "data": {
+                        "scoped": "true",
+                        "connection": "google"
+                      },
+                      "label": "BuildRegs Support Google (support@buildregs.co.uk)"
+                    },
+                    "saveAfterSent": {
+                      "label": "No"
+                    }
+                  }
+                },
+                "designer": {
+                  "x": 2400,
+                  "y": 300,
+                  "name": "7b. Email team: prepare quote"
+                }
+              },
+              "parameters": {
+                "account": 10482851,
+                "saveAfterSent": false
+              }
+            }
+          ]
+        }
+      ],
+      "version": 1,
+      "metadata": {
+        "designer": {
+          "x": 2100,
+          "y": 150,
+          "name": "7. Router: client + team"
+        }
+      },
+      "parameters": {}
+    }
+  ],
+  "name": "BuildRegs Phase 1 - Intake (Forminator)",
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "dlq": false,
+      "slots": null,
+      "dataloss": false,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "roundtrips": 1,
+      "sequential": false,
+      "confidential": false,
+      "autoCommitTriggerLast": true
+    }
+  },
+  "scheduling": {
+    "type": "immediately",
+    "maximum_runs_per_minute": 100
+  },
+  "interface": {
+    "input": [],
+    "output": []
+  }
+}
