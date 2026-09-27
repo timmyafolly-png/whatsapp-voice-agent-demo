@@ -237,3 +237,54 @@ to perform, so the switch is thrown by hand in Make. Sequence:
 
 If step 3 shows a problem, the execution is replayable, so it can be fixed and
 re-run against the same payload rather than lost.
+
+## Live result — the queued enquiry, recovered
+
+Scenario 7129360 switched on 27 Sep 2026 17:48 UTC. The queued payload released
+and ran through the deployed fix.
+
+Execution `a695cacdf95542bab2efc511ccd928a4` — status SUCCESS, 13 operations,
+1,044,305 bytes transferred, 8.3s. The scenario's lifetime error count stayed at
+12, so this run added none.
+
+Module counts from the run:
+
+| Module | Count | Meaning |
+| --- | --- | --- |
+| 40 Iterate | 1 | ran once, emitting per-file bundles |
+| 4 Download | **3** | one per file — the bug this fix exists for |
+| Guard: a real file came back | **3** | all three passed, nothing empty |
+| 5 Upload | **3** | all three written to Drive |
+| 7b Email client | **0** | blocked by the temporary hold, as intended |
+| 7c Email team | 1 | sent to support@ |
+
+Folder `BR-20260927-184851` (`1uRg6yadeZO31plpi-s9Q6mSitKejtFRU`), created 17:48:51
+inside the Projects folder, contains exactly three files, all `application/pdf`:
+
+| File | Bytes |
+| --- | --- |
+| `EhnQZYsCoUfx-102-rev-B-proposed-site-plan-Plan-25.53-202.pdf` | 385,951 |
+| `rnImy9C39dwd-201-rev-A-proposed-floor-plan-and-elevations-Plan-BT.25.53-201.pdf` | 435,507 |
+| `fmAuRIGzUqk9-101-existing-plans-and-elevations-3-Plan-BT.25.53-101.pdf` | 201,265 |
+
+Total 1,022,723 bytes, consistent with the execution's reported transfer. Filenames
+match the source URLs exactly, which confirms the filename expression, and the
+comma-space delimiter was handled — the second and third files are the ones that
+would have failed without `trim()`.
+
+The webhook queue is now empty.
+
+## Hold removed
+
+The `TEMPORARY HOLD` filter came off module 8 at 17:53 UTC, immediately after the
+above was verified. Client acknowledgement emails are live again. Scenario 7129360
+remains active.
+
+## Not verified from here
+
+The FluentCRM record for this enquiry could not be read directly — outbound
+requests to buildregs.co.uk are blocked by this environment's network policy.
+The indirect evidence is that module 6 completed and its `Resume` error handler
+did not fire, which means the API returned a 2xx. The fields themselves
+(`project_reference`, `project_type`, `enquiry_date`, `drive_folder_url`) should
+be eyeballed on the contact in FluentCRM before handover.
