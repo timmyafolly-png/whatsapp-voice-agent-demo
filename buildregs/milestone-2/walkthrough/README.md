@@ -1,6 +1,7 @@
 # Client walkthrough video
 
-`buildregs-walkthrough.webm` — 68 seconds, silent with on-screen captions, 1280x720.
+`buildregs-walkthrough.mp4` — 70 seconds, silent with on-screen captions, 1280x720, H.264.
+`buildregs-walkthrough.webm` — the raw capture the MP4 is encoded from.
 
 ## How it was made
 
@@ -62,11 +63,14 @@ folder URL, no personal details.
 
 ## Format
 
-WebM (VP8). Plays in Chrome, Firefox and Edge. Safari and QuickTime may not open it,
-and the container has no H.264 encoder, so an MP4 could not be produced here. Two
-straightforward routes: play it in a browser and record over it in Loom with a
-voiceover, which also solves the lack of narration, or convert it with any desktop
-tool or an online converter.
+Deliver the MP4. It is H.264 in an MP4 container with `faststart`, so it plays
+everywhere — Loom, QuickTime, email clients, phones — and is 2.7 MB against the
+WebM's 4.9 MB.
+
+Playwright captures only WebM (VP8), and the ffmpeg it bundles can encode nothing
+else, which is why the first few versions of this were WebM only. The `imageio-ffmpeg`
+pip package ships a full static ffmpeg 7.0.2 with libx264, and `make-mp4.sh` uses it to
+re-encode. Run that after any re-record.
 
 ## Not covered
 
@@ -86,11 +90,17 @@ re-running the recorder; changing its length means revisiting the matching entry
 
 ## Audio
 
-The video is silent and cannot be given a soundtrack here. The only ffmpeg available
-is the one Playwright bundles, which has no audio encoders at all and can encode video
-only as VP8. Supplying a voice recording would not help, because there is nothing in
-this environment able to combine it with the picture.
+The video is silent, and the captions are there so that it does not need sound.
 
-The captions above make the file usable as it stands. If narration is still wanted,
-play it in a browser and record over it in Loom, which produces a voiceover and an MP4
-in one step and solves the format limitation at the same time.
+Narration is nonetheless possible now. The static ffmpeg used for the MP4 also carries
+an AAC encoder, so a supplied voice recording can be muxed in:
+
+```
+ffmpeg -i buildregs-walkthrough.mp4 -i voiceover.m4a \
+       -c:v copy -c:a aac -shortest buildregs-walkthrough-narrated.mp4
+```
+
+The catch is timing rather than tooling. Matching narration to the slide changes means
+either recording against the running order in this README, or supplying one clip per
+section so each can be laid over its own slide. Recording over the video live in Loom
+avoids the problem entirely and remains the simpler route.
