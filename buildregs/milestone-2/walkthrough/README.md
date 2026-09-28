@@ -22,9 +22,15 @@ The real BuildRegs logo is embedded as a data URI, since this environment cannot
 reach buildregs.co.uk to fetch it at render time. The Upload Plans form and the
 FluentCRM record are real screenshots supplied by the freelancer.
 
-**Representational.** Only the Drive folder listing is still an illustration. It shows
-the right filenames and sizes in the right layout, but it is not a screenshot. Replace
-it with a real one when convenient — the folder for the recovered enquiry would do.
+**Representational.** Only the Drive folder listing is still built rather than captured.
+It is drawn in Drive's own visual language — the same chrome, column headings and row
+styling — but populated solely with BuildRegs content.
+
+A real screenshot was offered and deliberately not used. It was a personal My Drive
+and listed a dozen unrelated client folders by name, along with a storage quota. Putting
+that in front of this client would have exposed the freelancer's other engagements. If a
+genuine capture is ever wanted, it should be taken inside the Projects folder alone, with
+no sidebar and no other client visible.
 
 **Known inconsistency.** The CRM screenshot is a genuine record and carries the
 reference `BR-20260927-184851` with project type `Other`, while the rest of the video

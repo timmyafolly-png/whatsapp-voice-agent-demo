@@ -99,3 +99,45 @@ consecutive errors now each send an email of their own.
   it. Left alone deliberately: it changes how errors behave, and changing it in
   the same pass as the alerts would make any resulting problem hard to attribute.
   Worth doing on its own afterwards.
+
+
+# Empty CRM fields
+
+## What the client saw
+
+Opening a contact in FluentCRM shows eighteen custom fields, of which fourteen were
+blank, including Quote Status with no option selected at all. The record reads as
+though the automation had barely touched it.
+
+## What is actually happening
+
+| Group | Count | Explanation |
+| --- | --- | --- |
+| Filled at intake | 4 | `project_reference`, `project_type`, `enquiry_date`, `drive_folder_url` — correct |
+| Owned by Phase 2 | 6 | prices, adjustments, quote dates — Phase 2 is switched off at the client's own instruction, so nothing ever fills them |
+| Owned by Phase 3 | 7 | payment and terms fields — correctly empty until a payment arrives |
+| Owned by nobody | 1 | **`quote_status`** |
+
+So most of the emptiness is not a fault. Six fields are blank because automated quote
+sending is disabled pending the manual-review safeguards the client asked for, and
+seven are blank because the enquiry has not been paid. Both resolve themselves.
+
+## The one real defect
+
+`quote_status` was written only by Phase 2 (disabled) and Phase 3 (on payment). Phase 1
+never set it. Every new enquiry therefore sat with no status whatsoever — not "Draft",
+not anything — so there was no way to see that a job existed or where it had got to,
+and the radio group rendered with nothing selected, which is what makes a record look
+untouched.
+
+Phase 1's CRM write now sets `quote_status` to `Draft`. The value is one of the five
+options already configured on the field, and Phase 3 is already proven to write to this
+same radio field successfully when it sets `Paid`, so the mechanism is not in doubt.
+
+## Known limitation, not fixed
+
+Status lives on the contact, not on the job. A returning client who already paid and
+then submits a fresh enquiry will be reset to `Draft`, while their previous payment
+figures remain in the audit fields — an inconsistent-looking record. Fixing that
+properly means one record per job rather than per contact, which is a larger change
+than this milestone. Worth raising with the client rather than leaving to be discovered.
