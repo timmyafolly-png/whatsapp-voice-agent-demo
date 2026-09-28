@@ -1,10 +1,10 @@
 const { chromium } = require('/opt/node22/lib/node_modules/playwright');
 const path = require('path');
-const HOLD = [3200, 6000, 9000, 7500, 7000, 7000, 7000, 8000, 4000];
+const HOLD = [5500, 7200, 9500, 8000, 7800, 8000, 8500, 8500, 5200];
 (async () => {
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport:{width:1280,height:720},
-    recordVideo:{ dir: path.join(__dirname,'out4'), size:{width:1280,height:720} } });
+    recordVideo:{ dir: path.join(__dirname,'out6'), size:{width:1280,height:720} } });
   const p = await ctx.newPage();
   await p.goto('file://' + path.join(__dirname,'page.html'));
   await p.waitForTimeout(800);

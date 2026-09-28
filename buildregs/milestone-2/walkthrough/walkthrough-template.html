@@ -1,0 +1,76 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:720px;overflow:hidden;background:#EEF2F6;
+ font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#33414D}
+.stage{position:absolute;inset:0}
+.slide{position:absolute;inset:0;opacity:0;transition:opacity .45s ease;display:flex;flex-direction:column}
+.slide.on{opacity:1}
+.slide.plain{background:#FFFFFF}
+.hdr{padding:30px 60px 0 60px;flex:0 0 auto}
+.lbl{font-size:12px;letter-spacing:.16em;color:#1E7A4B;font-weight:700;margin-bottom:7px}
+.ttl{font-size:28px;line-height:36px;font-weight:600;color:#17324B}
+.stg{flex:1;display:flex;align-items:center;justify-content:center;padding:16px 60px 12px 60px;min-height:0}
+.card{background:#fff;border:1px solid #DDE4EA;border-radius:12px;box-shadow:0 10px 34px rgba(23,50,75,.10);
+ max-height:100%;overflow:hidden;width:100%;max-width:860px}
+.scrollbox{max-height:452px;overflow:hidden}
+.centre{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.rule{width:64px;height:4px;background:#1E7A4B;border-radius:2px;margin:26px 0}
+.sub{font-size:22px;color:#5A6B7A}
+.endline{font-size:20px;color:#5A6B7A;line-height:33px}
+/* caption bar */
+.cap{flex:0 0 auto;background:#17324B;color:#fff;padding:20px 60px;min-height:92px;display:flex;align-items:center}
+.cap p{font-size:20px;line-height:29px;font-weight:500;max-width:1080px}
+.cap .mark{color:#7FD4A5}
+/* screenshots */
+.shot{background:#fff;border:1px solid #DDE4EA;border-radius:12px;overflow:hidden;
+ box-shadow:0 10px 34px rgba(23,50,75,.10);display:flex;align-items:flex-start;justify-content:center}
+.shot img{display:block}
+.shot.tall{max-height:452px}.shot.tall img{height:452px;width:auto}
+.shot.wide{max-width:960px;max-height:452px}.shot.wide img{max-height:452px;width:auto;max-width:100%}
+/* mail */
+.mail{width:100%;max-width:860px;background:#fff;border:1px solid #DDE4EA;border-radius:12px;overflow:hidden;box-shadow:0 10px 34px rgba(23,50,75,.10)}
+.mh{background:#F7F9FB;border-bottom:1px solid #E3E8ED;padding:16px 26px}
+.mh.paid{background:#17324B}.mh.paid .ms{color:#fff}.mh.paid .mm{color:#9DB4C8}
+.mh.alert{background:#FDF3F2;border-bottom-color:#F3D6D3}.mh.alert .ms{color:#B3261E}
+.ms{font-size:17px;font-weight:600;color:#17324B}
+.mm{font-size:12.5px;color:#6B7A88;margin-top:5px}
+.mb{padding:22px 26px;font-size:14.5px;line-height:25px;max-height:360px;overflow:hidden}
+.kv{display:flex;gap:16px;padding:6px 0;border-bottom:1px solid #F0F3F6}
+.kv span{width:120px;color:#6B7A88;font-size:13px;flex:0 0 120px}
+.cta{margin-top:18px;display:inline-block;background:#1E7A4B;color:#fff;font-weight:600;padding:11px 23px;border-radius:6px;font-size:14px}
+/* drive */
+.drive{width:100%;max-width:800px;background:#fff;border:1px solid #DDE4EA;border-radius:12px;overflow:hidden;box-shadow:0 10px 34px rgba(23,50,75,.10)}
+.dh{padding:16px 24px;border-bottom:1px solid #E3E8ED;font-size:14.5px;color:#6B7A88;background:#F7F9FB}
+.dh strong{color:#17324B}
+.drow{display:flex;align-items:center;gap:15px;padding:14px 24px;border-bottom:1px solid #F0F3F6}
+.pdf{background:#FDECEA;color:#C5372C;font-size:10.5px;font-weight:700;padding:5px 8px;border-radius:4px}
+.dn{flex:1;font-size:14.5px;color:#33414D}
+.dz{font-size:12.5px;color:#8A97A3}
+.dnote{padding:14px 24px;font-size:13.5px;color:#1E7A4B;background:#F4FAF6;font-weight:600}
+</style></head><body><div class="stage" id="stage"></div>
+<script>
+const S = SLIDES_JSON;
+const stage = document.getElementById('stage');
+S.forEach((s,i)=>{
+  const d=document.createElement('div'); d.className='slide'+((s.kind==='title'||s.kind==='end')?' plain':''); d.id='s'+i;
+  let main='';
+  if(s.kind==='title'){
+    main='<div class="centre"><img src="'+s.logo+'" style="width:320px;height:auto"><div class="rule"></div>'+
+      '<div class="sub">From enquiry to paid job &mdash; automatically</div></div>';
+  } else if(s.kind==='end'){
+    main='<div class="centre"><img src="'+s.logo+'" style="width:320px;height:auto"><div class="rule"></div>'+
+      '<div class="endline">Every enquiry captured. Every file stored.<br>Every failure reported.</div></div>';
+  } else if(s.kind==='email'){
+    main='<div class="hdr"><div class="lbl">'+s.label+'</div><div class="ttl">'+s.title+'</div></div>'+
+      '<div class="stg"><div class="card"><div class="scrollbox">'+s.body+'</div></div></div>';
+  } else {
+    main='<div class="hdr"><div class="lbl">'+s.label+'</div><div class="ttl">'+s.title+'</div></div>'+
+      '<div class="stg">'+s.body+'</div>';
+  }
+  d.innerHTML = main + '<div class="cap"><p>'+(s.caption||'')+'</p></div>';
+  stage.appendChild(d);
+});
+window.show=(i)=>{document.querySelectorAll('.slide').forEach(e=>e.classList.remove('on'));
+  const el=document.getElementById('s'+i); if(el) el.classList.add('on');};
+window.show(0);
+</script></body></html>

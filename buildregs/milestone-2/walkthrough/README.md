@@ -1,13 +1,15 @@
 # Client walkthrough video
 
-`buildregs-walkthrough.webm` — 60 seconds, silent, 1280x720.
+`buildregs-walkthrough.webm` — 68 seconds, silent with on-screen captions, 1280x720.
 
 ## How it was made
 
-Rendered in headless Chromium and captured with Playwright's video recorder, from
-`walkthrough-source.html` in this folder. Re-running `record.js` against that page
-regenerates it, so the video can be rebuilt after the system changes rather than
-re-recorded by hand.
+Rendered in headless Chromium and captured with Playwright's video recorder.
+`walkthrough-template.html` holds the layout and `slides.json` the content; the build
+substitutes one into the other to produce `walkthrough-source.html`, which `record.js`
+then records. Editing content means editing `slides.json`, not the rendered page. The
+video can therefore be rebuilt after the system changes rather than re-recorded by
+hand.
 
 ## What is real and what is not
 
@@ -43,14 +45,14 @@ folder URL, no personal details.
 | Time | Section |
 | --- | --- |
 | 0:00 | Title |
-| 0:03 | Customer submits plans, three files |
-| 0:09 | Branded acknowledgement to the customer |
-| 0:18 | Team enquiry email with the folder link |
-| 0:26 | Files in a folder named by reference |
-| 0:33 | CRM record created |
-| 0:40 | Paid job handed to the team |
-| 0:47 | Failure alert — nothing fails quietly |
-| 0:55 | Close |
+| 0:06 | Customer submits plans |
+| 0:13 | Branded acknowledgement to the customer |
+| 0:22 | Team enquiry email with the folder link |
+| 0:30 | Files in a folder named by reference |
+| 0:38 | CRM record created |
+| 0:46 | Paid job handed to the team |
+| 0:55 | Failure alert — nothing fails quietly |
+| 1:03 | Close |
 
 ## Format
 
@@ -67,6 +69,15 @@ possible from here: it needs a logged-in browser session, and the account has
 two-factor authentication.
 
 
+## Captions
+
+Every slide carries a caption across the bottom in a navy bar, so the video reads
+without sound. The wording lives in `slides.json` under each slide's `caption` key,
+and the hold times in `record.js` were lengthened to give each one time to be read —
+roughly reading speed plus a beat. Editing a caption means editing that key and
+re-running the recorder; changing its length means revisiting the matching entry in
+`HOLD`.
+
 ## Audio
 
 The video is silent and cannot be given a soundtrack here. The only ffmpeg available
@@ -74,7 +85,6 @@ is the one Playwright bundles, which has no audio encoders at all and can encode
 only as VP8. Supplying a voice recording would not help, because there is nothing in
 this environment able to combine it with the picture.
 
-The practical route is to play the file in a browser and record over it in Loom with a
-live voiceover. That produces narration and an MP4 in one step, and solves the format
-limitation at the same time. The alternative, if a silent file is wanted, is on-screen
-captions, which can be added to the source page and re-rendered.
+The captions above make the file usable as it stands. If narration is still wanted,
+play it in a browser and record over it in Loom, which produces a voiceover and an MP4
+in one step and solves the format limitation at the same time.
