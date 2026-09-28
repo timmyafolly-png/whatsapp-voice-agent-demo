@@ -16,21 +16,27 @@ lifted from the live blueprint with the Make placeholders filled in. The team
 enquiry email, the paid-job email and the failure alert are likewise the deployed
 wording.
 
-**Representational.** The form page, the Drive folder listing and the CRM record are
-clean illustrations built for the video. They show the right fields with the right
-values, but they are not screenshots of the real interfaces. Anyone presenting this
-should describe it as a walkthrough of what the system produces, not as screen
-capture.
+The real BuildRegs logo is embedded as a data URI, since this environment cannot
+reach buildregs.co.uk to fetch it at render time. The Upload Plans form and the
+FluentCRM record are real screenshots supplied by the freelancer.
 
-**Substituted.** The header logo is a text wordmark rather than the hosted image,
-because this environment cannot reach buildregs.co.uk to fetch it. Real emails show
-the proper logo. Replacing the `<span>` with the original `<img>` tag in
-`walkthrough-source.html` restores it if the video is rebuilt somewhere with access.
+**Representational.** Only the Drive folder listing is still an illustration. It shows
+the right filenames and sizes in the right layout, but it is not a screenshot. Replace
+it with a real one when convenient — the folder for the recovered enquiry would do.
+
+**Known inconsistency.** The CRM screenshot is a genuine record and carries the
+reference `BR-20260927-184851` with project type `Other`, while the rest of the video
+follows a fictional customer with reference `BR-20260928-091245` and a single-storey
+extension. A viewer comparing the two slides closely would notice. Left as is because
+the alternative — relabelling the whole video `Other` to match — reads worse. Swapping
+the CRM slide for an illustrated record with matching data is a small change if the
+client ever raises it.
 
 **Invented.** The customer is fictional — Sarah Whitfield, 14 Oakfield Road,
-reference `BR-20260928-091245`. No real client's details appear, deliberately: the
-genuine recovered enquiry belongs to a real person and should not be in a
-promotional video.
+reference `BR-20260928-091245`. No real client's name, email or address appears
+anywhere, deliberately: the genuine recovered enquiry belongs to a real person and
+should not be in a promotional video. The CRM screenshot shows only a reference and a
+folder URL, no personal details.
 
 ## Running order
 
@@ -59,3 +65,16 @@ tool or an online converter.
 The video shows outcomes, not the Make canvas. Screen-recording Make itself was not
 possible from here: it needs a logged-in browser session, and the account has
 two-factor authentication.
+
+
+## Audio
+
+The video is silent and cannot be given a soundtrack here. The only ffmpeg available
+is the one Playwright bundles, which has no audio encoders at all and can encode video
+only as VP8. Supplying a voice recording would not help, because there is nothing in
+this environment able to combine it with the picture.
+
+The practical route is to play the file in a browser and record over it in Loom with a
+live voiceover. That produces narration and an MP4 in one step, and solves the format
+limitation at the same time. The alternative, if a silent file is wanted, is on-screen
+captions, which can be added to the source page and re-rendered.
