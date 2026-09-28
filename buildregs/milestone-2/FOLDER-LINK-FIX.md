@@ -111,3 +111,94 @@ references are unified later, the same store can be re-keyed by reference.
 `wahmed_2000@yahoo.co.uk` was written into the store by hand, pointing at
 `BR-20260927-184851`, so the recovered enquiry resolves correctly once Phase 3 is
 switched over.
+
+## Deployed
+
+### Phase 1 (7129360) — writes
+
+New module **3b, "Remember folder for later phases"** (`datastore:AddRecord`),
+placed in the main chain immediately after the folder is created and before the
+CRM call and the emails, so the record exists before anything downstream could
+need it.
+
+```
+key  = {{1.email_1}}
+data = { folderUrl  : {{3.webViewLink}}
+         folderId   : {{3.id}}
+         projectRef : {{2.projectRef}}
+         clientName : {{1.name_1_first_name}} {{1.name_1_last_name}}
+         createdAt  : now, Europe/London }
+overwrite = true
+```
+
+`overwrite: true` means a returning client's record is refreshed to their newest
+enquiry rather than erroring on a duplicate key. A `Resume` error handler keeps
+the rest of the enquiry running if the write ever fails, so a data store problem
+can never cost a client their folder, CRM record or acknowledgement.
+
+Cost: one extra operation per enquiry, 13 to 14.
+
+### Phase 3 (7248863) — reads
+
+Module 30 changes from `http:ActionSendData` (the CRM GET) to
+`datastore:GetRecord` keyed on `{{8.payerEmail}}`. Module 21 now reads
+`{{30.folderUrl}}` instead of the CRM path, keeping the same `ifempty` fallback
+to the Projects root so an unknown payer still produces a working button.
+
+Module 21 also gains `intakeRef` from `{{30.projectRef}}`, and the team email now
+shows an "Enquiry ref" line. That is the first time the payment side can display
+the intake reference, because until now it had no way to reach it — the two
+references being different values is the open scope question, and this at least
+puts both in front of the team.
+
+Cost: unchanged. The data store read replaces the HTTP call it already spent.
+
+## Tested before activation
+
+**Read**, executed live against the store (scenario 7636164, proof written into a
+Drive folder name because module outputs are not readable through the API):
+
+```
+ZZPROOF hit=BR-20260927-184851 miss=FELLBACK
+```
+
+A known key resolves to the right project reference; an unknown key falls back
+without erroring, so a payment from someone with no matching enquiry cannot break
+the scenario.
+
+**Write**, the same mapping Phase 1 uses, run against a fake payload and then read
+back out of the store:
+
+```
+key: zz-writetest@example.com
+  folderUrl  : https://drive.google.com/drive/folders/FAKEFOLDERID123
+  folderId   : FAKEFOLDERID123
+  projectRef : BR-WRITETEST-054015
+  clientName : Write Test
+  createdAt  : 2026-09-28 05:40:15
+```
+
+All five fields populated, including the concatenated name and the formatted
+timestamp. The test record was deleted afterwards; the store holds only the real
+backfilled record for the recovered enquiry.
+
+One snag worth noting: `datastore:GetRecord` rejected a configuration that looked
+complete, reporting only "Validation failed for 1 parameter(s)" without naming it.
+Make's own module validator identified the missing field as `returnWrapped`.
+
+## State
+
+| Scenario | State |
+| --- | --- |
+| 7129360 Phase 1 Intake | active, writes the record |
+| 7248863 Phase 3 Payment | active, reads the record |
+| 7229882 Phase 2 Quote Builder | off, per the client's instruction on quote safeguards |
+| 7636164 ZZ TEST harness | off, scheduling set to on-demand so it cannot self-fire |
+
+## Not yet proven end to end
+
+Neither scenario has been exercised by real traffic since the change. The write
+is proven in isolation and the read is proven against a real stored record, but
+no enquiry has yet gone through Phase 1 and out of Phase 3 in one pass. The
+recovered enquiry's record was backfilled by hand, so the team email for that
+client would already resolve correctly if a payment arrived now.
