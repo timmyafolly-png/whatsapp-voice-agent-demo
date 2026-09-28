@@ -1,0 +1,87 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:720px;overflow:hidden;background:#EEF2F6;
+ font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#33414D}
+.stage{position:absolute;inset:0}
+.slide{position:absolute;inset:0;opacity:0;transition:opacity .45s ease;display:flex;flex-direction:column}
+.slide.on{opacity:1}
+.hdr{padding:34px 60px 0 60px;flex:0 0 auto}
+.lbl{font-size:12px;letter-spacing:.16em;color:#1E7A4B;font-weight:700;margin-bottom:8px}
+.ttl{font-size:29px;line-height:38px;font-weight:600;color:#17324B}
+.stg{flex:1;display:flex;align-items:center;justify-content:center;padding:22px 60px 46px 60px;min-height:0}
+.card{background:#fff;border:1px solid #DDE4EA;border-radius:12px;box-shadow:0 10px 34px rgba(23,50,75,.10);
+ max-height:100%;overflow:hidden;width:100%;max-width:880px}
+.scrollbox{max-height:520px;overflow:hidden}
+/* title + end */
+.centre{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.wm{font-size:60px;font-weight:700;letter-spacing:-1.5px;color:#17324B}
+.sub{margin-top:16px;font-size:23px;color:#5A6B7A}
+.rule{width:64px;height:4px;background:#1E7A4B;border-radius:2px;margin:30px 0}
+.endline{font-size:20px;color:#5A6B7A;margin-top:10px;line-height:34px}
+/* browser */
+.browser{width:100%;max-width:860px;background:#fff;border:1px solid #DDE4EA;border-radius:12px;overflow:hidden;box-shadow:0 10px 34px rgba(23,50,75,.10)}
+.bar{background:#F2F5F8;border-bottom:1px solid #E3E8ED;padding:11px 16px;display:flex;align-items:center;gap:7px}
+.dot{width:11px;height:11px;border-radius:50%;background:#D5DDE4;display:inline-block}
+.url{margin-left:14px;background:#fff;border:1px solid #E3E8ED;border-radius:14px;padding:5px 16px;font-size:12.5px;color:#6B7A88}
+.form{padding:26px 34px 30px}
+.fh{font-size:20px;font-weight:600;color:#17324B;margin-bottom:18px}
+.fr{margin-bottom:13px}
+.fr label{display:block;font-size:12px;color:#6B7A88;margin-bottom:5px}
+.fi{border:1px solid #E3E8ED;border-radius:7px;padding:10px 13px;font-size:14.5px;background:#FBFCFD}
+.files{display:flex;gap:9px;flex-wrap:wrap}
+.file{background:#EDF7F1;border:1px solid #CBE5D7;color:#1E7A4B;border-radius:7px;padding:8px 13px;font-size:13px;font-weight:600}
+.submit{margin-top:19px;display:inline-block;background:#1E7A4B;color:#fff;font-weight:600;font-size:14.5px;padding:12px 26px;border-radius:7px}
+/* mail */
+.mail{width:100%;max-width:860px;background:#fff;border:1px solid #DDE4EA;border-radius:12px;overflow:hidden;box-shadow:0 10px 34px rgba(23,50,75,.10)}
+.mh{background:#F7F9FB;border-bottom:1px solid #E3E8ED;padding:17px 26px}
+.mh.paid{background:#17324B}.mh.paid .ms{color:#fff}.mh.paid .mm{color:#9DB4C8}
+.mh.alert{background:#FDF3F2;border-bottom-color:#F3D6D3}.mh.alert .ms{color:#B3261E}
+.ms{font-size:17px;font-weight:600;color:#17324B}
+.mm{font-size:12.5px;color:#6B7A88;margin-top:5px}
+.mb{padding:24px 26px;font-size:14.5px;line-height:25px}
+.kv{display:flex;gap:16px;padding:6px 0;border-bottom:1px solid #F0F3F6}
+.kv span{width:120px;color:#6B7A88;font-size:13px;flex:0 0 120px}
+.cta{margin-top:20px;display:inline-block;background:#1E7A4B;color:#fff;font-weight:600;padding:12px 24px;border-radius:6px;font-size:14px}
+/* drive */
+.drive{width:100%;max-width:800px;background:#fff;border:1px solid #DDE4EA;border-radius:12px;overflow:hidden;box-shadow:0 10px 34px rgba(23,50,75,.10)}
+.dh{padding:17px 24px;border-bottom:1px solid #E3E8ED;font-size:14.5px;color:#6B7A88;background:#F7F9FB}
+.dh strong{color:#17324B}
+.drow{display:flex;align-items:center;gap:15px;padding:15px 24px;border-bottom:1px solid #F0F3F6}
+.pdf{background:#FDECEA;color:#C5372C;font-size:10.5px;font-weight:700;padding:5px 8px;border-radius:4px}
+.dn{flex:1;font-size:14.5px;color:#33414D}
+.dz{font-size:12.5px;color:#8A97A3}
+.dnote{padding:15px 24px;font-size:13.5px;color:#1E7A4B;background:#F4FAF6;font-weight:600}
+/* crm */
+.crm{width:100%;max-width:800px;background:#fff;border:1px solid #DDE4EA;border-radius:12px;overflow:hidden;box-shadow:0 10px 34px rgba(23,50,75,.10)}
+.ch{padding:17px 24px;border-bottom:1px solid #E3E8ED;font-size:15px;font-weight:600;color:#17324B;background:#F7F9FB}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#F0F3F6}
+.cf{background:#fff;padding:17px 24px}
+.cf.wide{grid-column:1/-1}
+.cf label{display:block;font-size:11.5px;color:#6B7A88;margin-bottom:6px;letter-spacing:.03em}
+.cv{font-size:15px;color:#17324B;font-weight:600}
+.cv.link{color:#1E7A4B;font-weight:500}
+</style></head><body><div class="stage" id="stage"></div>
+<script>
+const S = [{"kind": "title", "label": "", "title": "", "body": ""}, {"kind": "panel", "label": "STEP 1", "title": "A customer submits their plans", "body": "<div class=\"browser\"><div class=\"bar\"><span class=\"dot\"></span><span class=\"dot\"></span><span class=\"dot\"></span>\n <div class=\"url\">buildregs.co.uk/upload-plans</div></div>\n <div class=\"form\">\n   <div class=\"fh\">Request a Quote</div>\n   <div class=\"fr\"><label>Name</label><div class=\"fi\">Sarah Whitfield</div></div>\n   <div class=\"fr\"><label>Email</label><div class=\"fi\">s.whitfield@example.co.uk</div></div>\n   <div class=\"fr\"><label>Property address</label><div class=\"fi\">14 Oakfield Road, Reading RG1 4TY</div></div>\n   <div class=\"fr\"><label>Project type</label><div class=\"fi\">Single-Storey Extension</div></div>\n   <div class=\"fr\"><label>Upload your plans</label><div class=\"files\">\n     <div class=\"file\">existing-plans.pdf</div><div class=\"file\">proposed-elevations.pdf</div><div class=\"file\">site-plan.pdf</div></div></div>\n   <div class=\"submit\">Submit enquiry</div>\n </div></div>"}, {"kind": "email", "label": "STEP 2", "title": "Within seconds, they get a branded acknowledgement", "body": "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F4F6F8;\">\n<tr><td align=\"center\" style=\"padding:24px 12px;\">\n<table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:600px; max-width:100%; background-color:#FFFFFF; border:1px solid #E3E8ED; border-radius:8px;\">\n<tr><td align=\"left\" style=\"padding:28px 32px 20px 32px; border-bottom:1px solid #E3E8ED;\">\n<span style=\"font-family:Helvetica,Arial,sans-serif; font-size:26px; font-weight:700; letter-spacing:-0.5px; color:#17324B;\">BuildRegs</span>\n</td></tr>\n<tr><td style=\"padding:32px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<h1 style=\"margin:0 0 16px 0; font-size:22px; line-height:30px; font-weight:600; color:#17324B;\">Thanks &mdash; we've received your enquiry</h1>\n<p style=\"margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;\">Hi Sarah,</p>\n<p style=\"margin:0 0 24px 0; font-size:15px; line-height:24px; color:#33414D;\">Thank you for getting in touch with BuildRegs. Your enquiry is with our technical team, who will review the details and prepare your quotation.</p>\n</td></tr>\n<tr><td style=\"padding:0 32px;\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;\">\n<tr><td style=\"padding:20px 24px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n<tr><td style=\"padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88; width:150px;\">Your reference</td><td style=\"padding:0 0 10px 0; font-size:15px; line-height:20px; color:#17324B; font-weight:600;\">BR-20260928-091245</td></tr>\n<tr><td style=\"padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88;\">Property</td><td style=\"padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;\">14 Oakfield Road, Reading RG1 4TY</td></tr>\n<tr><td style=\"padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88;\">Project type</td><td style=\"padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;\">Single-Storey Extension</td></tr>\n<tr><td style=\"padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88;\">Your plans</td><td style=\"padding:0 0 10px 0; font-size:15px; line-height:20px; color:#1E7A4B; font-weight:600;\">Received</td></tr>\n</table>\n</td></tr>\n</table>\n</td></tr>\n<tr><td style=\"padding:28px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<h2 style=\"margin:0 0 14px 0; font-size:17px; line-height:24px; font-weight:600; color:#17324B;\">What happens next</h2>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n<tr><td valign=\"top\" style=\"padding:0 12px 12px 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600; width:20px;\">1</td><td style=\"padding:0 0 12px 0; font-size:15px; line-height:24px; color:#33414D;\">We review your plans and project details.</td></tr>\n<tr><td valign=\"top\" style=\"padding:0 12px 12px 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600;\">2</td><td style=\"padding:0 0 12px 0; font-size:15px; line-height:24px; color:#33414D;\">We send you a fixed-fee quotation setting out exactly what's included.</td></tr>\n<tr><td valign=\"top\" style=\"padding:0 12px 0 0; font-size:15px; line-height:24px; color:#1E7A4B; font-weight:600;\">3</td><td style=\"padding:0; font-size:15px; line-height:24px; color:#33414D;\">Once you're happy, you accept online and we begin your drawings.</td></tr>\n</table>\n</td></tr>\n<tr><td style=\"padding:24px 32px 32px 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<p style=\"margin:0 0 8px 0; font-size:15px; line-height:24px; color:#33414D;\">If anything about your project changes in the meantime, just reply to this email and quote your reference.</p>\n<p style=\"margin:0; font-size:15px; line-height:24px; color:#33414D;\">Kind regards,<br><span style=\"color:#17324B; font-weight:600;\">The BuildRegs Team</span></p>\n</td></tr>\n<tr><td style=\"padding:20px 32px 24px 32px; border-top:1px solid #E3E8ED; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<p style=\"margin:0; font-size:12px; line-height:19px; color:#6B7A88;\">BuildRegs &middot; Building Regulations drawings &amp; structural calculations<br><a href=\"https://buildregs.co.uk\" style=\"color:#17324B; text-decoration:underline;\">buildregs.co.uk</a> &nbsp;&middot;&nbsp; <a href=\"mailto:support@buildregs.co.uk\" style=\"color:#17324B; text-decoration:underline;\">support@buildregs.co.uk</a></p>\n</td></tr>\n</table>\n</td></tr>\n</table>"}, {"kind": "panel", "label": "STEP 3", "title": "Your team gets the enquiry, with a direct link to the folder", "body": "<div class=\"mail\"><div class=\"mh\"><div class=\"ms\">New BuildRegs enquiry: BR-20260928-091245 &mdash; Sarah Whitfield</div>\n <div class=\"mm\">to support@buildregs.co.uk</div></div><div class=\"mb\">New enquiry received.<br><br>Ref: <strong>BR-20260928-091245</strong><br>Name: Sarah Whitfield<br>Email: s.whitfield@example.co.uk<br>Property: 14 Oakfield Road, Reading RG1 4TY<br>Project type: Single-Storey Extension<br>Files: <strong>Received</strong> (3 attached)<br>Folder: <a href=\"#\" style=\"color:#1E7A4B; font-weight:600;\">Open project folder</a><br>Consent: checked / checked<br><br>Description:<br>Rear single-storey extension, approx 24 sqm. Drawings attached.<br><br>Action: review and send quote.</div></div>"}, {"kind": "panel", "label": "STEP 4", "title": "Their files land in a folder named by reference", "body": "<div class=\"drive\"><div class=\"dh\"><span class=\"dico\">&#9634;</span> BuildRegs &rsaquo; Projects &rsaquo; <strong>BR-20260928-091245</strong></div>\n <div class=\"drow\"><span class=\"pdf\">PDF</span><span class=\"dn\">existing-plans.pdf</span><span class=\"dz\">386 KB</span></div>\n <div class=\"drow\"><span class=\"pdf\">PDF</span><span class=\"dn\">proposed-elevations.pdf</span><span class=\"dz\">436 KB</span></div>\n <div class=\"drow\"><span class=\"pdf\">PDF</span><span class=\"dn\">site-plan.pdf</span><span class=\"dz\">201 KB</span></div>\n <div class=\"dnote\">All three files arrive &mdash; multi-file uploads now come through complete.</div></div>"}, {"kind": "panel", "label": "STEP 5", "title": "A CRM record is created automatically", "body": "<div class=\"crm\"><div class=\"ch\">FluentCRM &mdash; Sarah Whitfield</div>\n <div class=\"cg\">\n  <div class=\"cf\"><label>Project Reference</label><div class=\"cv\">BR-20260928-091245</div></div>\n  <div class=\"cf\"><label>Project Type</label><div class=\"cv\">Single-Storey Extension</div></div>\n  <div class=\"cf\"><label>Enquiry Date</label><div class=\"cv\">2026-09-28</div></div>\n  <div class=\"cf\"><label>Quote Status</label><div class=\"cv\">Draft</div></div>\n  <div class=\"cf wide\"><label>Project folder</label><div class=\"cv link\">drive.google.com/drive/folders/&hellip;</div></div>\n </div></div>"}, {"kind": "panel", "label": "STEP 6", "title": "When they pay, the job is handed to your team", "body": "<div class=\"mail\"><div class=\"mh paid\"><div class=\"ms\">NEW PAID JOB &mdash; Single-Storey Extension</div>\n <div class=\"mm\">to support@buildregs.co.uk &middot; high priority</div></div>\n <div class=\"mb\">\n <div class=\"kv\"><span>Client</span><b>Sarah Whitfield</b></div>\n <div class=\"kv\"><span>Enquiry ref</span><b>BR-20260928-091245</b></div>\n <div class=\"kv\"><span>Amount</span><b style=\"color:#1E7A4B\">&pound;899.00 GBP</b></div>\n <div class=\"kv\"><span>Paid at</span><b>28 September 2026, 09:41</b></div>\n <div class=\"cta\">Open this job's folder</div>\n </div></div>"}, {"kind": "panel", "label": "STEP 7", "title": "If anything fails, you are told &mdash; it never fails quietly", "body": "<div class=\"mail\"><div class=\"mh alert\"><div class=\"ms\">ACTION NEEDED &mdash; client file missing (BR-20260928-091245)</div>\n <div class=\"mm\">to support@buildregs.co.uk &middot; high priority</div></div>\n <div class=\"mb\">\n <p style=\"margin:0 0 14px 0; font-weight:600; color:#B3261E;\">One of this client's uploaded files could not be collected.</p>\n <p style=\"margin:0 0 14px 0;\">The rest of the enquiry went through normally. This file is <b>missing from their project folder</b>.</p>\n <div class=\"kv\"><span>Reference</span><b>BR-20260928-091245</b></div>\n <div class=\"kv\"><span>File</span><b>site-plan.pdf</b></div>\n <p style=\"margin:14px 0 0 0; font-weight:600; color:#17324B;\">What to do</p>\n <p style=\"margin:4px 0 0 0;\">Open the file link above and save it into the project folder by hand.</p>\n </div></div>"}, {"kind": "end", "label": "", "title": "", "body": ""}];
+const stage = document.getElementById('stage');
+S.forEach((s,i)=>{
+  const d=document.createElement('div'); d.className='slide'; d.id='s'+i;
+  if(s.kind==='title'){
+    d.innerHTML='<div class="centre"><div class="wm">BuildRegs</div><div class="rule"></div>'+
+      '<div class="sub">From enquiry to paid job &mdash; automatically</div></div>';
+  } else if(s.kind==='end'){
+    d.innerHTML='<div class="centre"><div class="wm">BuildRegs</div><div class="rule"></div>'+
+      '<div class="endline">Every enquiry captured. Every file stored.<br>Every failure reported.</div></div>';
+  } else if(s.kind==='email'){
+    d.innerHTML='<div class="hdr"><div class="lbl">'+s.label+'</div><div class="ttl">'+s.title+'</div></div>'+
+      '<div class="stg"><div class="card"><div class="scrollbox">'+s.body+'</div></div></div>';
+  } else {
+    d.innerHTML='<div class="hdr"><div class="lbl">'+s.label+'</div><div class="ttl">'+s.title+'</div></div>'+
+      '<div class="stg">'+s.body+'</div>';
+  }
+  stage.appendChild(d);
+});
+window.show=(i)=>{document.querySelectorAll('.slide').forEach(e=>e.classList.remove('on'));
+  const el=document.getElementById('s'+i); if(el) el.classList.add('on');};
+window.show(0);
+</script></body></html>
