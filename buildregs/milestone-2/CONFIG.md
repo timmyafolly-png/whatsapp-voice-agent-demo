@@ -147,3 +147,53 @@ same way on the same day.
 Still outstanding for handover: every folder here, including the genuine one, is
 owned by `collsdigital@gmail.com`. Ownership transfer to the client is a separate
 task requiring the client present.
+
+## Quote Builder page URL (2 Oct 2026)
+
+Sandeep's latest message reverses his previous instruction. Current arrangement:
+
+| | URL |
+| --- | --- |
+| New Quote Builder page (live) | `https://buildregs.co.uk/quote-builder/` |
+| Old internal page (retained) | `https://buildregs.co.uk/quote-builder-internal/` |
+
+His earlier message had the new page being moved *onto* `/quote-builder-internal/`.
+It is not. The new page stays at `/quote-builder/`, and once the automation is
+confirmed working from it, Suhaib drafts the old internal post.
+
+**Nothing in Make had to change for this.** All three blueprints were searched and
+no scenario references either page URL anywhere. The Quote Builder form posts to a
+fixed Make webhook (`...17mavo7znmwtdbrw99dgy9lcsg4o2wo7`), and that webhook address
+is a property of the form, not of the page the form is embedded on. Moving, renaming
+or re-slugging the page does not break the automation and needs no redeploy.
+
+Rollback, if the page ever has to go back: re-embed the same Fluent Form on
+`/quote-builder-internal/`. No Make change is needed in that direction either. The
+only thing that would break the link is editing the form's webhook integration in
+Fluent Forms, so that integration should be left alone.
+
+Optional, not done: the Phase 1 team email ("prepare quote") could carry a button
+through to the Quote Builder. That would be the first place a page URL enters the
+automation, and would then need updating whenever the page moves. Not added without
+Sandeep's say-so, and deliberately not worth retyping a working live blueprint for.
+
+## Make Core subscription cost (confirmed 2 Oct 2026, from checkout)
+
+Read off the Make checkout screen, not a third-party tracker.
+
+| Billing cycle | Price | Included |
+| --- | --- | --- |
+| Monthly | $10.59 / month | 10,000 credits / month |
+| Yearly | $108.00 / year (= $9.00 / month, saves 15%) | 10,000 credits / month |
+
+Make now calls operations "credits". Credits reset monthly and do not roll over;
+rollover flexibility starts at the Pro plan.
+
+Why the upgrade is needed: the free plan caps **active scenarios at 2** and the
+system runs **3** (Intake, Quote Builder, Payment). That cap — not the operation
+count — is the blocker. It is also why testing in this account requires temporarily
+deactivating a live scenario.
+
+Headroom at 10,000 credits: a complete customer journey costs **32 operations**
+(intake 16 measured, quote 8 averaged over 31 runs, payment 8), so 10,000 covers
+roughly **312 full journeys per month**.
