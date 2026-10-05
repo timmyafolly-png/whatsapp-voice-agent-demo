@@ -21,15 +21,24 @@ them is a business threshold I invented.
 | --- | --- | --- |
 | 1 | No standard price in the price list for the submitted project type | Nothing to quote from |
 | 2 | Price list column C (Bespoke) = `Yes`, case-insensitive | Priced per job by a human by design |
-| 3 | Calculated final price is zero or negative | Bad arithmetic or missing input |
+| 3 | Final quotation **above £2,500** | Sandeep's approval cap, confirmed 6 Oct 2026 |
+| 4 | Calculated final price is zero or negative | Bad arithmetic or missing input |
 
-**An adjustment amount deliberately does not trigger review.** The Quote Builder is
-a staff tool; an adjustment entered there *is* the human judgement. Flagging it for
-review would mean every adjusted quote needs approving twice.
+Condition 3 is strictly *above* £2,500, as worded. A quotation of exactly £2,500
+goes out automatically; £2,500.01 is held. The threshold is inline in the
+`reviewNeeded` formula in **module 20 of scenario 7229882** — one place to change it.
 
-If Sandeep wants a cap as well — "review anything adjusted by more than £X", or
-"review anything over £Y" — that is a fourth condition and a one-line change to the
-`reviewNeeded` formula. It needs a number from him, so it is not in.
+The cap is applied to the **final** price, after any adjustment. So a £2,000 standard
+price adjusted up by £600 is held, even though neither figure alone is over the cap.
+
+**An adjustment amount on its own deliberately does not trigger review.** The Quote
+Builder is a staff tool; an adjustment entered there *is* the human judgement.
+Flagging it would mean every adjusted quote needs approving twice. Sandeep confirmed
+this on 6 Oct: *"leave manually entered price adjustments as they are, without
+triggering another review."*
+
+What he did add is the value cap in condition 3. An adjustment is therefore only
+relevant insofar as it pushes the total over £2,500.
 
 ## How it is built
 
@@ -58,7 +67,8 @@ filters, so the rule is readable in one place and the filters stay as
 reviewNeeded =
   if(length(trim(ifempty(8.`1`; ""))) = 0; "yes";
   if(lower(trim(ifempty(8.`2`; ""))) = "yes"; "yes";
-  if(parseNumber(11.finalPrice) > 0; "no"; "yes")))
+  if(parseNumber(11.finalPrice) > 2500; "yes";
+  if(parseNumber(11.finalPrice) > 0; "no"; "yes"))))
 ```
 
 `reviewReason` mirrors the same branches and carries the plain-English explanation
@@ -66,12 +76,12 @@ into the team email, so whoever picks the job up is told why it stopped.
 
 ## Test evidence
 
-Run in scenario 7636164 (on-demand harness), execution `f5dea4d4a32a402c96dc604148d43ae0`,
-2 ops, SUCCESS. Six synthetic cases evaluated through the exact deployed formula and
+Run in scenario 7636164 (on-demand harness), execution `63c82a30cc7d4215beb87462ebb7dbac`,
+2 ops, SUCCESS. Eleven synthetic cases evaluated through the exact deployed formula and
 parked in the data store so the outputs could be read back rather than inferred:
 
 ```
-A=yes B=yes C=yes D=no E=no F=no
+A=yes B=yes C=yes D=no E=no F=no  G=yes H=no I=yes J=yes K=no
 ```
 
 | Case | Inputs | Result | Expected |
@@ -82,9 +92,19 @@ A=yes B=yes C=yes D=no E=no F=no
 | D | £799 standard, no adjustment | `no` | no |
 | E | Bespoke `no` lowercase, £950 | `no` | no |
 | F | £799 adjusted up to £1,049 | `no` | no |
+| G | £2,600, no adjustment | `yes` | yes |
+| H | £2,500 exactly | `no` | no |
+| I | £2,000 adjusted up to £2,600 | `yes` | yes |
+| J | £2,501 | `yes` | yes |
+| K | £2,499 | `no` | no |
 
-Case E confirms the `lower()` guard; case F confirms an adjustment alone does not
-trip review. Reason strings returned correctly for A, B and C.
+Case E confirms the `lower()` guard. Case F confirms an adjustment alone does not trip
+review. H, J and K pin the cap boundary to the exact wording "above £2,500". I confirms
+the cap is applied after the adjustment, not to the list price. Reason strings returned
+correctly for the no-price, bespoke, over-cap and zero-price branches.
+
+An earlier six-case run (`f5dea4d4a32a402c96dc604148d43ae0`) verified A-F before the cap
+was added.
 
 A separate run (`c8a622d06c77415d9db17fe37d5ace74`, 2 ops, SUCCESS) posted
 `quote_status: "Manual Review Required"` to the live FluentCRM REST endpoint for
