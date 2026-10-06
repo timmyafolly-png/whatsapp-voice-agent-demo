@@ -191,9 +191,21 @@ It returned 2xx.
 
 That proves acceptance, not storage. FluentCRM returns 200 and silently discards a
 value it dislikes, and will not serve custom field values back over REST, so only a
-human look settles it. **Pending: Collins to open `collsdigital@gmail.com` in
-FluentCRM, confirm the six test values appear, then clear them.** If the number fields
-come back blank, the fix is to send them unquoted as JSON numbers.
+human look settles it.
+
+**Confirmed stored, 6 Oct 2026.** Collins opened `collsdigital@gmail.com` (contact 9,
+"Test Rand") and every one of the seven test values was present on the record:
+Standard Price 799, Adjustment Amount 250, Adjustment Reason, Final Price 1049, Quote
+Status on Manual Review Required, Quote Created and Quote Sent both dated. So JSON
+strings are correct for number-typed fields as well as text, date and radio, and no
+change to the deployed mappings is needed. Test values cleared afterwards.
+
+**Date fields are date-only.** The stamp is sent as `YYYY-MM-DD HH:mm:ss` but Quote
+Created and Quote Sent are `date` type, so FluentCRM keeps the day and drops the clock
+time. Two quotes raised on the same day are indistinguishable by these fields. If the
+time of day is ever needed, that is a field type change in FluentCRM, not an
+automation change - `project_reference` already carries a unique per-quote value if
+ordering within a day matters.
 
 ## Known gaps, not guessed at
 
