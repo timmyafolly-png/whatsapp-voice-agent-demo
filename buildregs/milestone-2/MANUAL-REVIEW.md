@@ -146,14 +146,56 @@ Fixed:
   never the status field
 - added `project_reference` and `project_type`
 
-## Known gaps, not guessed at
+## Custom field keys (read off FluentCRM, 6 Oct 2026)
 
-**Custom field keys.** Only keys proven live are written: `quote_status`,
-`project_reference`, `project_type`, `final_price`. The exact keys for Standard Price,
-Adjustment Amount, Adjustment Reason, Quote Created and Quote Sent are not confirmed,
-and FluentCRM silently drops values for keys that do not exist — so writing a guessed
-key looks like success and leaves the field blank. These need reading off
-FluentCRM -> Configure Custom Data before they are wired.
+Collins read these off FluentCRM -> Settings -> Custom Contact Fields, which lists
+Label, Slug and Type for all 18 fields. The nine Phase 2 writes to:
+
+| Label | Slug | Type | Written by |
+| --- | --- | --- | --- |
+| Quote Status | `quote_status` | radio | both routes |
+| Project Reference | `project_reference` | text | both routes |
+| Project Type | `project_type` | text | both routes |
+| Standard Price | `standard_price` | number | both routes |
+| Adjustment Amount | `adjustment_amount` | number | both routes |
+| Adjustment Reason | `adjustment_reason` | text | both routes |
+| Final Price | `final_price` | number | both routes |
+| Quote Created | `quote_created` | date | both routes |
+| Quote Sent | `quote_sent` | date | **auto-quote route only** |
+
+`quote_sent` is deliberately left blank on the manual-review route. The quote was
+created but never sent, so stamping a send date would put a falsehood in the record.
+That distinction is what makes two separate dates worth having.
+
+Both dates come from one `stamp` variable set in module 20, so on an auto-quote Quote
+Created and Quote Sent carry an identical timestamp rather than drifting by the second
+or two between modules.
+
+**Timing caveat:** the CRM write runs before the quotation email is sent, so
+`quote_sent` is stamped a moment before the email actually leaves. Module 7 has no
+error handler, so a send failure fails the whole run loudly rather than silently - but
+in that case `quote_sent` would be set on a quote that never arrived.
+
+### Numbers and dates are sent as JSON strings
+
+Values go out quoted (`"799"`, not `799`). Proven for text, date and radio:
+`enquiry_date` written as `"YYYY-MM-DD HH:mm:ss"` renders correctly on Adam Quarmby's
+record, as does `quote_status`.
+
+**Number fields were unproven**, because the Phase 2 CRM call 422'd on every previous
+run - no number had ever actually reached the CRM from this scenario. Tested directly
+in harness execution `7eed1903698c4565ab97ee09f9d74c05`: a POST carrying
+`standard_price` 799, `adjustment_amount` 250 and `final_price` 1049 as strings, plus
+both date fields, with `handleErrors: true` so a rejection would have failed the run.
+It returned 2xx.
+
+That proves acceptance, not storage. FluentCRM returns 200 and silently discards a
+value it dislikes, and will not serve custom field values back over REST, so only a
+human look settles it. **Pending: Collins to open `collsdigital@gmail.com` in
+FluentCRM, confirm the six test values appear, then clear them.** If the number fields
+come back blank, the fix is to send them unquoted as JSON numbers.
+
+## Known gaps, not guessed at
 
 **Project type missing from the price list.** Condition 1 above catches a row that
 exists with a blank price. It does **not** catch a project type with no row at all:
