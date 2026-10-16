@@ -135,11 +135,9 @@ replay any of them.
   (`1JEue_AwRSUXBYz7iXj7lnMvzWFSv5Q9U`). The file inside it was attached in error
   and belongs to an unrelated project; delete it rather than leaving it in a
   client folder.
-- **Phone field still unconfirmed.** The CRM write sends `"phone"`, and the run
-  succeeded, but FluentCRM is unreachable from the automation environment so the
-  stored value has not been read back. Open the "Deliverability Test" contact and
-  check the Phone field shows 07700 900123. If blank, the key name is wrong for
-  this FluentCRM version.
+- **Phone field CONFIRMED 16 Oct.** The "Deliverability Test" contact
+  (subscribers/9) shows 07700 900123 in Phone/Mobile. The `"phone"` key is correct
+  for FluentCRM 3.2.6.
 - **Phone blanking edge case.** `"phone": "{{1.phone_1}}"` sends an empty string
   when the field is absent, and `__force_update` is on, so a repeat enquiry from
   an existing contact submitted without a phone would clear the stored number.
@@ -149,3 +147,51 @@ replay any of them.
 - Forminator "Upload Plans" acknowledgement stays uncreated, as instructed.
 - Quotation approval and payment rules unchanged. No SMS added. Stripe still in
   test mode.
+
+
+## Stale quote data on returning contacts (found 16 Oct, NOT fixed)
+
+Reading the test contact back revealed a real issue that is easy to miss.
+
+Phase 1 matches the CRM contact on email address with `__force_update: true`. That
+updates the existing contact and overwrites **only the fields Phase 1 sends**:
+email, name, phone, address, `quote_status`, `project_reference`, `project_type`,
+`enquiry_date`, `drive_folder_url`. Everything written by Phase 2 and Phase 3 is
+left untouched.
+
+On the 16 Oct test contact that produced a record mixing today's enquiry with a
+previous run's commercials:
+
+| Field | Shown | Origin |
+|---|---|---|
+| project_reference, enquiry_date, project_type, drive_folder_url, quote_status | today's | Phase 1, 16 Oct |
+| standard_price 799, adjustment_amount 1702, final_price 2501 | stale | 7 Oct |
+| stripe_payment_id, stripe_session_id, amount_paid 949 | stale | 7 Oct |
+| quote_created, quote_sent, payment_date, terms_accepted_at (all 2026-10-07) | stale | 7 Oct |
+
+**Why it matters in production.** A past customer enquiring about a second project
+gets a contact showing a brand new enquiry alongside the previous job's price,
+Stripe payment id and amount paid. The record reads as though the new job is
+already quoted and paid.
+
+The underlying cause is structural: a contact holds one project's worth of quote
+data, so a second project from the same person has nowhere to go.
+
+Options, for Sandeep to decide, since this touches the quotation and payment
+fields he asked to leave unchanged:
+
+1. Have Phase 1 blank the quote and payment custom fields on every new enquiry.
+   Small change. Risk: wipes live data if a customer re-submits the form during an
+   active quote.
+2. Leave as is and handle returning customers manually, with the team told to
+   distrust those fields on a repeat contact.
+3. Longer term, move per-project data out of the contact record so one contact can
+   hold several projects. Largest change, and the only one that actually fixes the
+   model.
+
+Nothing has been changed. Recommendation is option 1 as a near-term guard, with
+option 3 noted for any future phase.
+
+Minor, unrelated: FluentCRM reports "Server-side cron job is not enabled". It does
+not affect this pipeline, since Make performs the work, but it would affect
+FluentCRM's own email sequences and automations if those are ever used.
