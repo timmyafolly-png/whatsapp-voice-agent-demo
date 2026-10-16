@@ -100,18 +100,26 @@ replay any of them.
 
 ## Open items
 
-- **Mail authentication is unverified.** Sandeep asked for the visible From,
-  Reply-To, Return-Path and whether SPF, DKIM and DMARC pass and align. This
-  cannot be done from the automation environment: buildregs.co.uk, make.com and
-  even DNS-over-HTTPS resolvers are all blocked by the container's egress proxy,
-  so neither the DNS records nor a sent message can be inspected here.
-  To finish it: submit one enquiry on the live Upload Plans form using
-  collsdigital@gmail.com with a small file attached. The acknowledgement then
-  lands in a Gmail mailbox that can be read directly, and the full received
-  headers can be reported.
-  Mail is sent by `email:ActionSendEmail` over Google connection 11641152
-  (support@buildregs.co.uk), so the records that matter are buildregs.co.uk's
-  SPF include for Google, its Google DKIM selector, and its DMARC policy.
+- **Mail authentication VERIFIED 16 Oct.** Test enquiry BR-20261016-072647 sent to
+  collsdigital@gmail.com. Gmail "Show original" reported:
+
+  | Field | Value |
+  |---|---|
+  | Visible From | `support@buildregs.co.uk` |
+  | Reply-To | not set; replies go to the From address (module 8 has `replyTo: ""`) |
+  | Return-Path | not captured in the summary box; moot, see below |
+  | SPF | PASS, IP 209.85.220.41 (Google range) |
+  | DKIM | PASS, domain `buildregs.co.uk` |
+  | DMARC | **PASS** |
+  | Message-ID | `<259614d5-e039-7142-bc66-b691c3b37e64@buildregs.co.uk>` |
+  | X-Mailer | nodemailer 2.7.2 (Make's email module) |
+
+  **Alignment holds.** DKIM signed as `buildregs.co.uk`, the same domain as the
+  visible From, so DKIM is aligned and DMARC passes on that basis. Return-Path is
+  therefore not load-bearing here. The failure mode to watch for in future, if the
+  sending connection is ever changed, is DKIM signing as `gmail.com` instead: SPF
+  and DKIM would both still show PASS while DMARC failed on alignment.
+
 - **Sequencing conflict to flag to Sandeep.** He asked for the header check
   *before* the Make acknowledgement goes live, and in the same message asked for
   Phase 1 to be reactivated. Reactivating makes the acknowledgement live. Phase 1
@@ -122,6 +130,16 @@ replay any of them.
   (`1R9bsl51RvGXjZ2GFAd1KHEAfxPEziyjR`) left by the failed run. Trashing it was
   refused because it is owned by support@buildregs.co.uk. Sandeep deletes it.
 - **Scenario 7636164** "ZZ TEST (delete me)" still present.
+- **Test artefacts from the 16 Oct deliverability run** to remove: CRM contact
+  "Deliverability Test", Drive folder `BR-20261016-072647`
+  (`1JEue_AwRSUXBYz7iXj7lnMvzWFSv5Q9U`). The file inside it was attached in error
+  and belongs to an unrelated project; delete it rather than leaving it in a
+  client folder.
+- **Phone field still unconfirmed.** The CRM write sends `"phone"`, and the run
+  succeeded, but FluentCRM is unreachable from the automation environment so the
+  stored value has not been read back. Open the "Deliverability Test" contact and
+  check the Phone field shows 07700 900123. If blank, the key name is wrong for
+  this FluentCRM version.
 - **Phone blanking edge case.** `"phone": "{{1.phone_1}}"` sends an empty string
   when the field is absent, and `__force_update` is on, so a repeat enquiry from
   an existing contact submitted without a phone would clear the stored number.
