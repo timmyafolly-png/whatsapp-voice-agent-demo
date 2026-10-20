@@ -154,3 +154,75 @@ adjustment, so it is worth confirming an empty adjustment reads as zero and
 gives you £799 rather than an error.
 
 Do that one first, before you do the three cap tests.
+
+---
+
+## 9. Which form, and which box is the adjustment
+
+**The form is the Quote Builder:**
+
+> **https://buildregs.co.uk/quote-builder/**
+
+That is the live page. There is also an older page at
+`/quote-builder-internal/` which is retained but not the one in use.
+
+This is a **Fluent Forms** form, and it posts straight to a fixed Make
+webhook. The page it sits on does not matter to the automation.
+
+### What the automation actually reads from that form
+
+The form sends eight fields. The automation only uses four of them:
+
+| Form field name | What the automation does with it |
+|---|---|
+| `email` | The customer's email. Everything is keyed off this |
+| `dropdown` | The project type. This is what looks up the standard price |
+| `numeric_field_1` | **The adjustment.** This is the box that moves the total |
+| `input_text` | The adjustment reason. Goes to the CRM only |
+| `numeric_field` | **Ignored.** Nothing reads it |
+| `numeric_field_2` | **Ignored.** Nothing reads it |
+| `input_text_1` | **Ignored.** Nothing reads it |
+
+**Watch out for this.** There are three boxes on that form that the
+automation does not read at all. If you type your adjustment into the wrong
+numeric box, the total will not move and the quote will go out at the plain
+standard price. On a live call that would look like the cap had failed when
+in fact nothing was ever adjusted.
+
+### How to be certain which box is which, before the call
+
+Submit one throwaway quote with a number you would recognise, say `1234`,
+in whichever box you think is the adjustment. Then open Make, Phase 2,
+History, click the run, and click the first module. You will see the raw
+payload the form sent, with the field names next to the values. If `1234`
+is sitting next to `numeric_field_1`, that is the right box.
+
+One run settles it, and you will not be guessing in front of him.
+
+### Optional: hitting the numbers exactly, without the form
+
+If you want to rehearse the cap precisely, you can post to the webhook
+directly from your own machine. Run this in a terminal, changing the email to
+your own:
+
+```
+curl -X POST https://hook.eu1.make.com/17mavo7znmwtdbrw99dgy9lcsg4o2wo7 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "YOUR-EMAIL@example.com",
+    "dropdown": "Single-Storey Extension",
+    "numeric_field_1": "1702",
+    "input_text": "Threshold rehearsal",
+    "__submission": { "serial_number": "9101" }
+  }'
+```
+
+`1701` gives £2,500 and should send. `1702` gives £2,501 and should hold.
+
+Two warnings. This is the live scenario, so it really will create a Stripe
+test session, really will email the address you put in, and really will write
+to the CRM. Use your own email address, and change `serial_number` each time
+so each test gets its own reference.
+
+Use the form itself for the actual demo. Sandeep should see the real journey,
+not a terminal.
