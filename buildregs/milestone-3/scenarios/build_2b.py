@@ -13,6 +13,9 @@ TAB = "Projects"
 CONN_SHEETS = 10263943
 CONN_MAIL = 11641152
 CONN_STRIPE = 10506139
+HOOK = 3957194          # BuildRegs Quote Approval
+HOOK_URL = "https://hook.eu1.make.com/u6k1ltrlcq5qs82upswhorlyujnkd531"
+SCENARIO_ID = 8118767
 
 # Projects columns as filterRows 0-based indices
 C = {n: i for i, n in enumerate([
@@ -166,7 +169,7 @@ flow = [
   "metadata": {"designer": {"x": 0, "y": 0, "name": "1. Approval link tapped"},
                "restore": {"parameters": {"hook": {"label": "BuildRegs Quote Approval",
                                                    "data": {"editable": "true"}}}}},
-  "parameters": {"maxResults": 1}, "mapper": {}},
+  "parameters": {"hook": HOOK, "maxResults": 1}, "mapper": {}},
 
  {"id": 2, "module": "google-sheets:filterRows", "version": 2,
   "metadata": {"designer": {"x": 300, "y": 0, "name": "2. Find the project row"}},
