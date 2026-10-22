@@ -1,0 +1,480 @@
+{
+ "name": "BuildRegs Phase 2b - Quote approval (approve or request info)",
+ "metadata": {
+  "version": 1
+ },
+ "flow": [
+  {
+   "id": 1,
+   "module": "gateway:CustomWebHook",
+   "version": 1,
+   "metadata": {
+    "designer": {
+     "x": 0,
+     "y": 0,
+     "name": "1. Approval link tapped"
+    },
+    "restore": {
+     "parameters": {
+      "hook": {
+       "label": "BuildRegs Quote Approval",
+       "data": {
+        "editable": "true"
+       }
+      }
+     }
+    }
+   },
+   "parameters": {
+    "maxResults": 1
+   },
+   "mapper": {}
+  },
+  {
+   "id": 2,
+   "module": "google-sheets:filterRows",
+   "version": 2,
+   "metadata": {
+    "designer": {
+     "x": 300,
+     "y": 0,
+     "name": "2. Find the project row"
+    }
+   },
+   "parameters": {
+    "__IMTCONN__": 10263943
+   },
+   "mapper": {
+    "from": "drive",
+    "limit": "1",
+    "sheetId": "Projects",
+    "spreadsheetId": "1j7h3PsEwa_vHIIEmJXexvIoSJUoS81gv4V4YZRPvETQ",
+    "includesHeaders": true,
+    "tableFirstRow": "A1:BZ1",
+    "sortOrder": "asc",
+    "valueRenderOption": "UNFORMATTED_VALUE",
+    "dateTimeRenderOption": "FORMATTED_STRING",
+    "filter": [
+     [
+      {
+       "a": "A",
+       "o": "text:equal",
+       "b": "{{1.ref}}"
+      }
+     ]
+    ]
+   }
+  },
+  {
+   "id": 10,
+   "module": "util:SetVariables",
+   "version": 1,
+   "metadata": {
+    "designer": {
+     "x": 600,
+     "y": 0,
+     "name": "3. Build the fields"
+    }
+   },
+   "mapper": {
+    "scope": "roundtrip",
+    "variables": [
+     {
+      "name": "greeting",
+      "value": "{{if(length(ifempty(trim(get(split(2.`5`; \" \"); 1)); \"\")) > 0; \"Hi \" + trim(get(split(2.`5`; \" \"); 1)) + \",\"; \"Hello,\")}}"
+     },
+     {
+      "name": "totalFmt",
+      "value": "{{formatNumber(parseNumber(2.`18`); 2)}}"
+     },
+     {
+      "name": "totalPence",
+      "value": "{{round(parseNumber(2.`18`) * 100)}}"
+     },
+     {
+      "name": "packageName",
+      "value": "{{ifempty(2.`9`; \"BuildRegs package\")}}"
+     },
+     {
+      "name": "stamp",
+      "value": "{{formatDate(now; \"YYYY-MM-DD HH:mm:ss\"; \"Europe/London\")}}"
+     }
+    ]
+   }
+  },
+  {
+   "id": 50,
+   "module": "builtin:BasicRouter",
+   "version": 1,
+   "metadata": {
+    "designer": {
+     "x": 900,
+     "y": 0,
+     "name": "4. Router"
+    }
+   },
+   "mapper": {},
+   "routes": [
+    {
+     "flow": [
+      {
+       "id": 20,
+       "module": "stripe:makeAnApiCall",
+       "version": 1,
+       "metadata": {
+        "designer": {
+         "x": 1200,
+         "y": -300,
+         "name": "5a. Expire the old payment link"
+        }
+       },
+       "parameters": {
+        "__IMTCONN__": 10506139
+       },
+       "filter": {
+        "name": "Approving, and an old session exists",
+        "conditions": [
+         [
+          {
+           "a": "{{1.token}}",
+           "o": "text:equal",
+           "b": "{{2.`32`}}"
+          },
+          {
+           "a": "{{1.action}}",
+           "o": "text:equal",
+           "b": "approve"
+          },
+          {
+           "a": "{{2.`27`}}",
+           "o": "exist"
+          }
+         ]
+        ]
+       },
+       "mapper": {
+        "url": "/v1/checkout/sessions/{{2.`27`}}/expire",
+        "method": "POST",
+        "headers": [],
+        "qs": [],
+        "body": ""
+       },
+       "onerror": [
+        {
+         "id": 29,
+         "module": "builtin:Resume",
+         "version": 1,
+         "metadata": {
+          "designer": {
+           "x": 1500,
+           "y": -300,
+           "name": "Already expired or paid, carry on"
+          }
+         },
+         "mapper": {}
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "flow": [
+      {
+       "id": 21,
+       "module": "stripe:makeAnApiCall",
+       "version": 1,
+       "metadata": {
+        "designer": {
+         "x": 1200,
+         "y": 0,
+         "name": "5b. Create the payment link"
+        }
+       },
+       "parameters": {
+        "__IMTCONN__": 10506139
+       },
+       "filter": {
+        "name": "Token matches and action is approve",
+        "conditions": [
+         [
+          {
+           "a": "{{1.token}}",
+           "o": "text:equal",
+           "b": "{{2.`32`}}"
+          },
+          {
+           "a": "{{1.action}}",
+           "o": "text:equal",
+           "b": "approve"
+          }
+         ]
+        ]
+       },
+       "mapper": {
+        "url": "/v1/checkout/sessions",
+        "method": "POST",
+        "headers": [
+         {
+          "key": "Content-Type",
+          "value": "application/x-www-form-urlencoded"
+         }
+        ],
+        "qs": [],
+        "body": "mode=payment&success_url=https://buildregs.co.uk/thank-you&customer_email={{2.`6`}}&line_items[0][quantity]=1&line_items[0][price_data][currency]=gbp&line_items[0][price_data][unit_amount]={{10.totalPence}}&line_items[0][price_data][product_data][name]=BuildRegs - {{10.packageName}}&line_items[0][price_data][product_data][description]=Project: {{2.`8`}} / Quotation reference: {{2.`0`}}&custom_text[submit][message]=Secure payment for the services set out in your BuildRegs quotation. Once your payment is confirmed, we will email your confirmation and next steps. For any questions before paying, contact support@buildregs.co.uk.&metadata[quote_reference]={{2.`0`}}&metadata[project_reference]={{2.`1`}}&metadata[client_email]={{2.`6`}}&metadata[final_price]={{2.`18`}}"
+       }
+      },
+      {
+       "id": 22,
+       "module": "email:ActionSendEmail",
+       "version": 6,
+       "metadata": {
+        "designer": {
+         "x": 1500,
+         "y": 0,
+         "name": "6b. Send the quotation"
+        }
+       },
+       "parameters": {
+        "account": 11641152,
+        "saveAfterSent": false
+       },
+       "mapper": {
+        "to": [
+         "{{2.`6`}}"
+        ],
+        "cc": [],
+        "bcc": [],
+        "from": "",
+        "sender": "BuildRegs",
+        "replyTo": "support@buildregs.co.uk",
+        "subject": "Your fixed-fee quotation - {{2.`8`}} | BuildRegs",
+        "contentType": "html",
+        "html": "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F4F6F8;\"><tr><td align=\"center\" style=\"padding:24px 12px;\"><div style=\"display:none; max-height:0; overflow:hidden; mso-hide:all;\">Your fixed-fee quotation for {{2.`8`}}.</div><table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:600px; max-width:100%; background-color:#FFFFFF; border:1px solid #E3E8ED; border-radius:8px;\"><tr><td align=\"left\" style=\"padding:28px 32px 20px 32px; border-bottom:1px solid #E3E8ED;\"><img src=\"https://buildregs.co.uk/wp-content/uploads/2025/11/BuildRegs-Black-1024x227.png\" alt=\"BuildRegs\" width=\"150\" style=\"display:block; width:150px; max-width:150px; height:auto; border:0;\"></td></tr><tr><td style=\"padding:32px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><h1 style=\"margin:0 0 16px 0; font-size:22px; line-height:30px; font-weight:600; color:#17324B;\">Your fixed-fee quotation</h1></td></tr><tr><td style=\"padding:0px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><p style=\"margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;\">{{10.greeting}}</p><p style=\"margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;\">Thank you for your enquiry. We&rsquo;ve reviewed the information provided and prepared your fixed-fee quotation for the work outlined below.</p><p style=\"margin:0 0 24px 0; font-size:15px; line-height:24px; color:#33414D;\">The package sets out the documents we will prepare for your builder and Building Control, together with the fee and delivery timeframe.</p></td></tr><tr><td style=\"padding:0px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><h2 style=\"margin:0 0 14px 0; font-size:17px; line-height:24px; font-weight:600; color:#17324B;\">Your project</h2></td></tr><tr><td style=\"padding:0px 32px 0px 32px;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;\"><tr><td style=\"padding:20px 24px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88; width:150px;\">Property</td><td style=\"padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D; \">{{2.`8`}}</td></tr><tr><td style=\"padding:0 0 0 0; font-size:13px; line-height:20px; color:#6B7A88; width:150px;\">Quotation reference</td><td style=\"padding:0 0 0 0; font-size:15px; line-height:20px; color:#17324B; font-weight:600;\">{{2.`0`}}</td></tr></table></td></tr></table></td></tr><tr><td style=\"padding:28px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><h2 style=\"margin:0 0 14px 0; font-size:17px; line-height:24px; font-weight:600; color:#17324B;\">What&rsquo;s included</h2></td></tr><tr><td style=\"padding:0px 32px 0px 32px;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;\"><tr><td style=\"padding:20px 24px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif; font-size:15px; line-height:24px; color:#33414D;\">{{2.`20`}}</td></tr></table></td></tr><tr><td style=\"padding:28px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><h2 style=\"margin:0 0 14px 0; font-size:17px; line-height:24px; font-weight:600; color:#17324B;\">Your fixed fee</h2></td></tr><tr><td style=\"padding:0px 32px 0px 32px;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;\"><tr><td style=\"padding:20px 24px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">{{if(length(split(2.`10`; \", \")) >= 1; \"<tr><td style='padding:0 0 10px 0; font-size:14px; line-height:20px; color:#6B7A88; width:60%;'>\" + get(split(2.`10`; \", \"); 1) + \"</td><td style='padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;'>&pound;\" + formatNumber(parseNumber(get(split(2.`11`; \", \"); 1)); 2) + \"</td></tr>\"; \"\")}}{{if(length(split(2.`10`; \", \")) >= 2; \"<tr><td style='padding:0 0 10px 0; font-size:14px; line-height:20px; color:#6B7A88; width:60%;'>\" + get(split(2.`10`; \", \"); 2) + \"</td><td style='padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;'>&pound;\" + formatNumber(parseNumber(get(split(2.`11`; \", \"); 2)); 2) + \"</td></tr>\"; \"\")}}{{if(length(split(2.`10`; \", \")) >= 3; \"<tr><td style='padding:0 0 10px 0; font-size:14px; line-height:20px; color:#6B7A88; width:60%;'>\" + get(split(2.`10`; \", \"); 3) + \"</td><td style='padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;'>&pound;\" + formatNumber(parseNumber(get(split(2.`11`; \", \"); 3)); 2) + \"</td></tr>\"; \"\")}}{{if(length(split(2.`10`; \", \")) >= 4; \"<tr><td style='padding:0 0 10px 0; font-size:14px; line-height:20px; color:#6B7A88; width:60%;'>\" + get(split(2.`10`; \", \"); 4) + \"</td><td style='padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;'>&pound;\" + formatNumber(parseNumber(get(split(2.`11`; \", \"); 4)); 2) + \"</td></tr>\"; \"\")}}{{if(parseNumber(ifempty(2.`14`; 0)) > 0; \"<tr><td style='padding:0 0 10px 0; font-size:14px; line-height:20px; color:#6B7A88;'>\" + 2.`13` + \" discount</td><td style='padding:0 0 10px 0; font-size:15px; line-height:20px; color:#1E7A4B;'>&minus; &pound;\" + formatNumber(parseNumber(2.`14`); 2) + \"</td></tr>\"; \"\")}}{{if(parseNumber(ifempty(2.`16`; 0)) != 0; \"<tr><td style='padding:0 0 10px 0; font-size:14px; line-height:20px; color:#6B7A88;'>\" + ifempty(2.`17`; \"Adjustment\") + \"</td><td style='padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;'>&pound;\" + formatNumber(parseNumber(2.`16`); 2) + \"</td></tr>\"; \"\")}}<tr><td colspan=\"2\" style=\"padding:12px 0 0 0; border-top:1px solid #E3E8ED;\"></td></tr><tr><td style=\"padding:0; font-size:15px; line-height:24px; color:#17324B; font-weight:600;\">Total payable</td><td style=\"padding:0; font-size:20px; line-height:26px; color:#17324B; font-weight:700;\">&pound;{{10.totalFmt}}</td></tr><tr><td colspan=\"2\" style=\"padding:6px 0 0 0; font-size:13px; line-height:20px; color:#6B7A88;\">No VAT to add.</td></tr></table></td></tr></table></td></tr><tr><td style=\"padding:20px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><p style=\"margin:0 0 0px 0; font-size:15px; line-height:24px; color:#33414D;\">This is the total fee for the scope listed above. If you later request changes to that scope, we&rsquo;ll agree any revised fee with you before carrying out additional work.</p></td></tr>{{if(length(trim(ifempty(2.`21`; \"\"))) > 0; \"<tr><td style='padding:20px 32px 0 32px;'><table role='presentation' width='100%' cellpadding='0' cellspacing='0' border='0' style='background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;'><tr><td style='padding:20px 24px; font-family:Poppins,Segoe UI,Helvetica,Arial,sans-serif; font-size:15px; line-height:24px; color:#33414D;'><strong style='color:#17324B;'>Please note</strong><br>\" + 2.`21` + \"</td></tr></table></td></tr>\"; \"\")}}<tr><td style=\"padding:28px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><h2 style=\"margin:0 0 14px 0; font-size:17px; line-height:24px; font-weight:600; color:#17324B;\">Turnaround</h2></td></tr><tr><td style=\"padding:0px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><p style=\"margin:0 0 0px 0; font-size:15px; line-height:24px; color:#33414D;\"><strong>{{2.`19`}} working days</strong> from receipt of payment and all required information. We&rsquo;ll confirm your target delivery date once everything is in place.</p></td></tr><tr><td style=\"padding:24px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><p style=\"margin:0 0 0px 0; font-size:15px; line-height:24px; color:#33414D;\">To get started, please use the secure Stripe payment button below. You&rsquo;ll receive confirmation of your payment and the next steps by email.</p></td></tr><tr><td align=\"center\" style=\"padding:24px 32px 8px 32px;\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td align=\"center\" bgcolor=\"#17324B\" style=\"border-radius:6px;\"><a href=\"{{21.body.url}}\" style=\"display:inline-block; padding:15px 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif; font-size:16px; line-height:20px; font-weight:600; color:#FFFFFF; text-decoration:none; border-radius:6px;\">Proceed securely &mdash; &pound;{{10.totalFmt}}</a></td></tr></table></td></tr><tr><td style=\"padding:16px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><p style=\"margin:0 0 8px 0; font-size:15px; line-height:24px; color:#33414D;\">If you&rsquo;d like to clarify anything before proceeding, simply reply. We&rsquo;ll be happy to explain the scope or answer your questions.</p></td></tr><tr><td style=\"padding:8px 32px 32px 32px; border-top:1px solid #E3E8ED; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><p style=\"margin:16px 0 0 0; font-size:15px; line-height:24px; color:#33414D;\">Kind regards,<br><strong style=\"color:#17324B;\">The BuildRegs Team</strong><br><span style=\"font-size:13px; line-height:20px; color:#6B7A88;\">Building Regulations Drawings &amp; Structural Calculations</span><br><a href=\"mailto:support@buildregs.co.uk\" style=\"font-size:13px; line-height:20px; color:#17324B;\">support@buildregs.co.uk</a><br><a href=\"https://www.buildregs.co.uk/\" style=\"font-size:13px; line-height:20px; color:#17324B;\">www.buildregs.co.uk</a></p></td></tr></table></td></tr></table>",
+        "priority": "normal",
+        "headers": [],
+        "attachments": [],
+        "inReplyTo": "",
+        "references": []
+       }
+      },
+      {
+       "id": 23,
+       "module": "google-sheets:makeAPICall",
+       "version": 2,
+       "metadata": {
+        "designer": {
+         "x": 1800,
+         "y": 0,
+         "name": "7b. Record it on the project row"
+        }
+       },
+       "parameters": {
+        "__IMTCONN__": 10263943
+       },
+       "mapper": {
+        "url": "spreadsheets/1j7h3PsEwa_vHIIEmJXexvIoSJUoS81gv4V4YZRPvETQ/values:batchUpdate",
+        "method": "POST",
+        "headers": [],
+        "qs": [],
+        "body": {
+         "valueInputOption": "USER_ENTERED",
+         "data": [
+          {
+           "range": "Projects!C{{2.__ROW_NUMBER__}}",
+           "values": [
+            [
+             "Quote sent"
+            ]
+           ]
+          },
+          {
+           "range": "Projects!E{{2.__ROW_NUMBER__}}",
+           "values": [
+            [
+             "{{10.stamp}}"
+            ]
+           ]
+          },
+          {
+           "range": "Projects!AH{{2.__ROW_NUMBER__}}",
+           "values": [
+            [
+             "{{10.stamp}}"
+            ]
+           ]
+          },
+          {
+           "range": "Projects!AI{{2.__ROW_NUMBER__}}",
+           "values": [
+            [
+             "{{10.stamp}}"
+            ]
+           ]
+          },
+          {
+           "range": "Projects!AB{{2.__ROW_NUMBER__}}",
+           "values": [
+            [
+             "{{21.body.id}}"
+            ]
+           ]
+          }
+         ]
+        }
+       }
+      },
+      {
+       "id": 24,
+       "module": "gateway:WebhookRespond",
+       "version": 1,
+       "metadata": {
+        "designer": {
+         "x": 2100,
+         "y": 0,
+         "name": "8b. Confirm to Sandeep"
+        }
+       },
+       "mapper": {
+        "status": "200",
+        "headers": [
+         {
+          "key": "Content-Type",
+          "value": "text/html; charset=utf-8"
+         }
+        ],
+        "body": "<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>BuildRegs</title></head><body style='margin:0; background:#F4F6F8; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;'><div style='max-width:420px; margin:48px auto; padding:32px 24px; background:#fff; border:1px solid #E3E8ED; border-radius:10px; text-align:center;'><h1 style='margin:0 0 12px; font-size:20px; color:#1E7A4B;'>Quotation approved and sent</h1><p style='margin:0; font-size:15px; line-height:24px; color:#33414D;'>The quotation for {{2.`0`}} has gone to the customer with a payment link. The India team has not been notified; that happens only once payment is confirmed.</p></div></body></html>"
+       }
+      }
+     ]
+    },
+    {
+     "flow": [
+      {
+       "id": 30,
+       "module": "email:ActionSendEmail",
+       "version": 6,
+       "metadata": {
+        "designer": {
+         "x": 1200,
+         "y": 300,
+         "name": "5c. Ask for more information"
+        }
+       },
+       "parameters": {
+        "account": 11641152,
+        "saveAfterSent": false
+       },
+       "filter": {
+        "name": "Token matches and action is request information",
+        "conditions": [
+         [
+          {
+           "a": "{{1.token}}",
+           "o": "text:equal",
+           "b": "{{2.`32`}}"
+          },
+          {
+           "a": "{{1.action}}",
+           "o": "text:equal",
+           "b": "request_info"
+          }
+         ]
+        ]
+       },
+       "mapper": {
+        "to": [
+         "{{2.`6`}}"
+        ],
+        "cc": [],
+        "bcc": [],
+        "from": "",
+        "sender": "BuildRegs",
+        "replyTo": "support@buildregs.co.uk",
+        "subject": "We need a little more information | BuildRegs",
+        "contentType": "html",
+        "html": "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F4F6F8;\"><tr><td align=\"center\" style=\"padding:24px 12px;\"><table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:600px; max-width:100%; background-color:#FFFFFF; border:1px solid #E3E8ED; border-radius:8px;\"><tr><td align=\"left\" style=\"padding:28px 32px 20px 32px; border-bottom:1px solid #E3E8ED;\"><img src=\"https://buildregs.co.uk/wp-content/uploads/2025/11/BuildRegs-Black-1024x227.png\" alt=\"BuildRegs\" width=\"150\" style=\"display:block; width:150px; max-width:150px; height:auto; border:0;\"></td></tr><tr><td style=\"padding:32px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><h1 style=\"margin:0 0 16px 0; font-size:22px; line-height:30px; font-weight:600; color:#17324B;\">We need a little more information</h1><p style=\"margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;\">{{10.greeting}}</p><p style=\"margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;\">Thank you for your enquiry about your project at <strong>{{2.`8`}}</strong>. Before we can prepare your fixed-fee quotation, we need a little more detail about the work.</p><p style=\"margin:0 0 24px 0; font-size:15px; line-height:24px; color:#33414D;\">{{ifempty(1.message; \"Please reply to this email describing the work you are planning, and attach any drawings or supporting documents you already have.\")}}</p></td></tr><tr><td style=\"padding:0 32px;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;\"><tr><td style=\"padding:20px 24px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88; width:150px;\">Your reference</td><td style=\"padding:0 0 10px 0; font-size:15px; line-height:20px; color:#17324B; font-weight:600;\">{{2.`0`}}</td></tr><tr><td style=\"padding:0; font-size:13px; line-height:20px; color:#6B7A88;\">Property</td><td style=\"padding:0; font-size:15px; line-height:20px; color:#33414D;\">{{2.`8`}}</td></tr></table></td></tr></table></td></tr><tr><td style=\"padding:24px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><p style=\"margin:0 0 8px 0; font-size:15px; line-height:24px; color:#33414D;\">Just reply to this email and we will pick it up from there. As soon as we have what we need, we will send your quotation.</p></td></tr><tr><td style=\"padding:8px 32px 32px 32px; border-top:1px solid #E3E8ED; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><p style=\"margin:16px 0 0 0; font-size:15px; line-height:24px; color:#33414D;\">Kind regards,<br><strong style=\"color:#17324B;\">The BuildRegs Team</strong><br><span style=\"font-size:13px; line-height:20px; color:#6B7A88;\">Building Regulations Drawings &amp; Structural Calculations</span><br><a href=\"mailto:support@buildregs.co.uk\" style=\"font-size:13px; line-height:20px; color:#17324B;\">support@buildregs.co.uk</a><br><a href=\"https://www.buildregs.co.uk/\" style=\"font-size:13px; line-height:20px; color:#17324B;\">www.buildregs.co.uk</a></p></td></tr></table></td></tr></table>",
+        "priority": "normal",
+        "headers": [],
+        "attachments": [],
+        "inReplyTo": "",
+        "references": []
+       }
+      },
+      {
+       "id": 31,
+       "module": "google-sheets:makeAPICall",
+       "version": 2,
+       "metadata": {
+        "designer": {
+         "x": 1500,
+         "y": 300,
+         "name": "6c. Record it on the project row"
+        }
+       },
+       "parameters": {
+        "__IMTCONN__": 10263943
+       },
+       "mapper": {
+        "url": "spreadsheets/1j7h3PsEwa_vHIIEmJXexvIoSJUoS81gv4V4YZRPvETQ/values:batchUpdate",
+        "method": "POST",
+        "headers": [],
+        "qs": [],
+        "body": {
+         "valueInputOption": "USER_ENTERED",
+         "data": [
+          {
+           "range": "Projects!C{{2.__ROW_NUMBER__}}",
+           "values": [
+            [
+             "Draft"
+            ]
+           ]
+          },
+          {
+           "range": "Projects!E{{2.__ROW_NUMBER__}}",
+           "values": [
+            [
+             "{{10.stamp}}"
+            ]
+           ]
+          },
+          {
+           "range": "Projects!AP{{2.__ROW_NUMBER__}}",
+           "values": [
+            [
+             "Information requested from the customer on {{10.stamp}}"
+            ]
+           ]
+          }
+         ]
+        }
+       }
+      },
+      {
+       "id": 32,
+       "module": "gateway:WebhookRespond",
+       "version": 1,
+       "metadata": {
+        "designer": {
+         "x": 1800,
+         "y": 300,
+         "name": "7c. Confirm to Sandeep"
+        }
+       },
+       "mapper": {
+        "status": "200",
+        "headers": [
+         {
+          "key": "Content-Type",
+          "value": "text/html; charset=utf-8"
+         }
+        ],
+        "body": "<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>BuildRegs</title></head><body style='margin:0; background:#F4F6F8; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;'><div style='max-width:420px; margin:48px auto; padding:32px 24px; background:#fff; border:1px solid #E3E8ED; border-radius:10px; text-align:center;'><h1 style='margin:0 0 12px; font-size:20px; color:#8A5A00;'>Information requested</h1><p style='margin:0; font-size:15px; line-height:24px; color:#33414D;'>We have asked the customer for more detail about {{2.`0`}}. No quotation and no payment link were sent. The draft is saved and waiting for you.</p></div></body></html>"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
