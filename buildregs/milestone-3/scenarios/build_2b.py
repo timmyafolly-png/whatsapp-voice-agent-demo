@@ -14,6 +14,10 @@ TAB = "Projects"
 CONN_SHEETS = 10263943
 CONN_MAIL = 11641152
 CONN_STRIPE = 10506139
+# `sender` in email:ActionSendEmail v6 is type "email", so a display name there
+# fails bundle validation at runtime even though validate_module_configuration
+# accepts it. The display name goes in `from`, in the form its help documents.
+FROM_LINE = '"BuildRegs" <support@buildregs.co.uk>'
 HOOK = 3957194          # BuildRegs Quote Approval
 HOOK_URL = "https://hook.eu1.make.com/u6k1ltrlcq5qs82upswhorlyujnkd531"
 SCENARIO_ID = 8118767
@@ -263,7 +267,7 @@ flow = [
       "metadata": {"designer": {"x": 1500, "y": 0, "name": "6b. Send the quotation"}},
       "parameters": {"account": CONN_MAIL, "saveAfterSent": False},
       "mapper": {"to": [col("customer_email")], "cc": [], "bcc": [],
-                 "from": "", "sender": "BuildRegs", "replyTo": "support@buildregs.co.uk",
+                 "from": FROM_LINE, "sender": "", "replyTo": "support@buildregs.co.uk",
                  "subject": "Your fixed-fee quotation - " + col("property_address") + " | BuildRegs",
                  "contentType": "html", "html": QUOTE_HTML,
                  "priority": "normal", "headers": [], "attachments": [],
@@ -301,7 +305,7 @@ flow = [
                                 + [{"a": "{{1.action}}", "o": "text:equal",
                                     "b": "request_info"}]]},
       "mapper": {"to": [col("customer_email")], "cc": [], "bcc": [],
-                 "from": "", "sender": "BuildRegs", "replyTo": "support@buildregs.co.uk",
+                 "from": FROM_LINE, "sender": "", "replyTo": "support@buildregs.co.uk",
                  "subject": "We need a little more information | BuildRegs",
                  "contentType": "html", "html": minify(INFO_HTML),
                  "priority": "normal", "headers": [], "attachments": [],
