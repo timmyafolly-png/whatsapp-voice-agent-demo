@@ -128,6 +128,29 @@ Expect, in order:
    `stripe_session_id` filled in
 5. The Checks tab still reading zero on both control rows
 
+**Result, 22 Oct 2026, 22:43 UTC: PASSED.** Execution
+`a790ebdc66634bbcacf1d2899a55811d`, SUCCESS, **7 operations**: webhook, row
+lookup, variables, Stripe session, quotation email, row update, response. The
+expire route correctly skipped, since this row had no earlier session.
+
+The HTML confirmation page came back and the quotation rendered with the logo,
+the greeting, both fee lines, the combined discount, the conditions block, the
+turnaround and the payment button.
+
+It took three attempts to get there. The first two failed with
+BundleValidationError at five operations, and the cause was `sender` in
+email:ActionSendEmail v6 being `"type": "email"` while it had been set to the
+display name `BuildRegs`. `validate_module_configuration` accepts that,
+because it does not enforce the format, so checking the module in isolation
+passed while every run failed. The display name belongs in `from`.
+
+One defect the first successful run exposed: every money figure rendered in
+European format, `1.248,50` rather than `1,248.50`. Make's `formatNumber`
+falls back to the organisation's locale when separators are omitted, and this
+organisation's is European. All six calls in the quotation email and the
+`totalFmt` variable now pass `"."` and `","` explicitly. **Never call
+`formatNumber` here without separators.**
+
 **Then run the positive a second time.** The first session should be expired
 and a new one issued, which is the duplicate-click behaviour Sandeep asked
 for. Confirm in Stripe that the first session shows as expired.

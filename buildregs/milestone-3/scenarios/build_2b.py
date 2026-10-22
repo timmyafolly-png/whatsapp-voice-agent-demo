@@ -68,7 +68,7 @@ def fee_line(n):
       '"<tr><td style=\'padding:0 0 10px 0; font-size:14px; line-height:20px; color:#6B7A88; width:60%%;\'>" '
       '+ get(%s; %d) + '
       '"</td><td style=\'padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;\'>&pound;" '
-      '+ formatNumber(parseNumber(get(%s; %d)); 2) + "</td></tr>"; "")}}'
+      '+ formatNumber(parseNumber(get(%s; %d)); 2; "."; ",") + "</td></tr>"; "")}}'
       % (types, n, types, n, prices, n))
 
 ITEMISED = "".join(fee_line(i) for i in range(1, 5))
@@ -78,7 +78,7 @@ DISCOUNT_ROW = (
   '"<tr><td style=\'padding:0 0 10px 0; font-size:14px; line-height:20px; color:#6B7A88;\'>" '
   '+ %s + '
   '" discount</td><td style=\'padding:0 0 10px 0; font-size:15px; line-height:20px; color:#1E7A4B;\'>&minus; &pound;" '
-  '+ formatNumber(parseNumber(%s); 2) + "</td></tr>"; "")}}'
+  '+ formatNumber(parseNumber(%s); 2; "."; ",") + "</td></tr>"; "")}}'
   % (col("discount_amount").strip("{}"), col("discount_type").strip("{}"),
      col("discount_amount").strip("{}")))
 
@@ -87,7 +87,7 @@ ADJUSTMENT_ROW = (
   '"<tr><td style=\'padding:0 0 10px 0; font-size:14px; line-height:20px; color:#6B7A88;\'>" '
   '+ ifempty(%s; "Adjustment") + '
   '"</td><td style=\'padding:0 0 10px 0; font-size:15px; line-height:20px; color:#33414D;\'>&pound;" '
-  '+ formatNumber(parseNumber(%s); 2) + "</td></tr>"; "")}}'
+  '+ formatNumber(parseNumber(%s); 2; "."; ",") + "</td></tr>"; "")}}'
   % (col("adjustment_amount").strip("{}"), col("adjustment_reason").strip("{}"),
      col("adjustment_amount").strip("{}")))
 
@@ -197,7 +197,7 @@ flow = [
   "metadata": {"designer": {"x": 600, "y": 0, "name": "3. Build the fields"}},
   "mapper": {"scope": "roundtrip", "variables": [
     {"name": "greeting", "value": GREETING},
-    {"name": "totalFmt", "value": "{{formatNumber(parseNumber(%s); 2)}}" % col("total").strip("{}")},
+    {"name": "totalFmt", "value": '{{formatNumber(parseNumber(%s); 2; "."; ",")}}' % col("total").strip("{}")},
     {"name": "totalPence", "value": "{{round(parseNumber(%s) * 100)}}" % col("total").strip("{}")},
     {"name": "packageName",
      "value": '{{ifempty(%s; "BuildRegs package")}}' % col("package").strip("{}")},
