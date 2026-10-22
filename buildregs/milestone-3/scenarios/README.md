@@ -93,9 +93,19 @@ curl -i "https://hook.eu1.make.com/u6k1ltrlcq5qs82upswhorlyujnkd531\
 ?ref=BR-Q-20261022-1041&token=wrong&action=approve"
 ```
 
-Expect: no email, no Stripe session, no change to row 2. Make's history will
-show a run that reached the router and stopped. A generic response rather than
-a styled page is correct here.
+**Result, 22 Oct 2026, 22:21 UTC: PASSED.** Execution
+`8e5b394da28647e1960c2f22a203c3e9`, SUCCESS, **3 operations**.
+
+Three operations is the proof. It accounts for the webhook, the row lookup and
+the variables, and nothing else; routers cost nothing, so every module past
+the router was skipped. Had any of them run the count would be five or more,
+and the sheet write alone would have added one. So no email left, no Stripe
+session was created, and row 2 was not touched.
+
+The response was the bare word `Accepted`, which is Make's own default. That
+is correct: the response modules sit on the routes too, so none of them ran
+either. A styled page here would have meant the token check let the request
+through.
 
 **Then the positive.**
 
