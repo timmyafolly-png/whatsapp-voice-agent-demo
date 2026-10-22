@@ -6,6 +6,7 @@ scenario is what those links hit. Nothing here can reach a customer unless
 the token on the link matches the token stored on the project row.
 """
 import json, os, re
+from urllib.parse import quote
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SHEET = "1j7h3PsEwa_vHIIEmJXexvIoSJUoS81gv4V4YZRPvETQ"
@@ -33,6 +34,13 @@ C = {n: i for i, n in enumerate([
 def col(name):
     """filterRows reference for a Projects column."""
     return "{{2.`%d`}}" % C[name]
+
+def enc(name):
+    """A Projects column, percent-encoded for a form-urlencoded body. The
+    property address carries spaces and commas, which would otherwise break
+    the body Stripe parses."""
+    return "{{encodeURL(%s)}}" % col(name).strip("{}")
+
 
 def a1(name, row_expr):
     """A1 column letter for a Projects column, with a mapped row number."""
@@ -204,7 +212,11 @@ flow = [
       "filter": {"name": "Approving, and an old session exists",
                  "conditions": [TOKEN_OK
                                 + [{"a": "{{1.action}}", "o": "text:equal", "b": "approve"},
-                                   {"a": col("stripe_session_id"), "o": "exist"}]]},
+                                   # NOT "exist": in Make an empty string exists, so a
+                                   # blank session id would send the expire call to
+                                   # /v1/checkout/sessions//expire with no id in the path.
+                                   {"a": "{{length(trim(ifempty(%s; \"\")))}}" % col("stripe_session_id").strip("{}"),
+                                    "o": "number:greater", "b": "0"}]]},
       "mapper": {"url": "/v1/checkout/sessions/%s/expire" % col("stripe_session_id"),
                  "method": "POST", "headers": [], "qs": [], "body": ""},
       "onerror": [{"id": 29, "module": "builtin:Resume", "version": 1,
@@ -224,21 +236,28 @@ flow = [
                  "headers": [{"key": "Content-Type",
                               "value": "application/x-www-form-urlencoded"}],
                  "qs": [],
-                 "body": ("mode=payment"
-                          "&success_url=https://buildregs.co.uk/thank-you"
-                          "&customer_email=" + col("customer_email") +
-                          "&line_items[0][quantity]=1"
-                          "&line_items[0][price_data][currency]=gbp"
-                          "&line_items[0][price_data][unit_amount]={{10.totalPence}}"
-                          "&line_items[0][price_data][product_data][name]=BuildRegs - {{10.packageName}}"
-                          "&line_items[0][price_data][product_data][description]=Project: "
-                          + col("property_address") + " / Quotation reference: "
-                          + col("quote_reference") +
-                          "&custom_text[submit][message]=Secure payment for the services set out in your BuildRegs quotation. Once your payment is confirmed, we will email your confirmation and next steps. For any questions before paying, contact support@buildregs.co.uk."
-                          "&metadata[quote_reference]=" + col("quote_reference") +
-                          "&metadata[project_reference]=" + col("project_reference") +
-                          "&metadata[client_email]=" + col("customer_email") +
-                          "&metadata[final_price]=" + col("total"))}},
+                 "body": "".join([
+                     "mode=payment",
+                     "&success_url=https://buildregs.co.uk/thank-you",
+                     "&customer_email=", enc("customer_email"),
+                     "&line_items[0][quantity]=1",
+                     "&line_items[0][price_data][currency]=gbp",
+                     "&line_items[0][price_data][unit_amount]={{10.totalPence}}",
+                     "&line_items[0][price_data][product_data][name]=",
+                     quote("BuildRegs - "), "{{encodeURL(10.packageName)}}",
+                     "&line_items[0][price_data][product_data][description]=",
+                     quote("Project: "), enc("property_address"),
+                     quote(" / Quotation reference: "), enc("quote_reference"),
+                     "&custom_text[submit][message]=", quote(
+                         "Secure payment for the services set out in your BuildRegs "
+                         "quotation. Once your payment is confirmed, we will email your "
+                         "confirmation and next steps. For any questions before paying, "
+                         "contact support@buildregs.co.uk."),
+                     "&metadata[quote_reference]=", enc("quote_reference"),
+                     "&metadata[project_reference]=", enc("project_reference"),
+                     "&metadata[client_email]=", enc("customer_email"),
+                     "&metadata[final_price]=", col("total"),
+                 ])}},
 
      {"id": 22, "module": "email:ActionSendEmail", "version": 6,
       "metadata": {"designer": {"x": 1500, "y": 0, "name": "6b. Send the quotation"}},

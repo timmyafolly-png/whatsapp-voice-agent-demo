@@ -147,8 +147,9 @@
            "b": "approve"
           },
           {
-           "a": "{{2.`27`}}",
-           "o": "exist"
+           "a": "{{length(trim(ifempty(2.`27`; \"\")))}}",
+           "o": "number:greater",
+           "b": "0"
           }
          ]
         ]
@@ -221,7 +222,7 @@
          }
         ],
         "qs": [],
-        "body": "mode=payment&success_url=https://buildregs.co.uk/thank-you&customer_email={{2.`6`}}&line_items[0][quantity]=1&line_items[0][price_data][currency]=gbp&line_items[0][price_data][unit_amount]={{10.totalPence}}&line_items[0][price_data][product_data][name]=BuildRegs - {{10.packageName}}&line_items[0][price_data][product_data][description]=Project: {{2.`8`}} / Quotation reference: {{2.`0`}}&custom_text[submit][message]=Secure payment for the services set out in your BuildRegs quotation. Once your payment is confirmed, we will email your confirmation and next steps. For any questions before paying, contact support@buildregs.co.uk.&metadata[quote_reference]={{2.`0`}}&metadata[project_reference]={{2.`1`}}&metadata[client_email]={{2.`6`}}&metadata[final_price]={{2.`18`}}"
+        "body": "mode=payment&success_url=https://buildregs.co.uk/thank-you&customer_email={{encodeURL(2.`6`)}}&line_items[0][quantity]=1&line_items[0][price_data][currency]=gbp&line_items[0][price_data][unit_amount]={{10.totalPence}}&line_items[0][price_data][product_data][name]=BuildRegs%20-%20{{encodeURL(10.packageName)}}&line_items[0][price_data][product_data][description]=Project%3A%20{{encodeURL(2.`8`)}}%20/%20Quotation%20reference%3A%20{{encodeURL(2.`0`)}}&custom_text[submit][message]=Secure%20payment%20for%20the%20services%20set%20out%20in%20your%20BuildRegs%20quotation.%20Once%20your%20payment%20is%20confirmed%2C%20we%20will%20email%20your%20confirmation%20and%20next%20steps.%20For%20any%20questions%20before%20paying%2C%20contact%20support%40buildregs.co.uk.&metadata[quote_reference]={{encodeURL(2.`0`)}}&metadata[project_reference]={{encodeURL(2.`1`)}}&metadata[client_email]={{encodeURL(2.`6`)}}&metadata[final_price]={{2.`18`}}"
        }
       },
       {
