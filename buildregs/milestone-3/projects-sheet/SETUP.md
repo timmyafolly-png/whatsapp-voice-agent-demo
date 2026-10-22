@@ -10,49 +10,44 @@ format of each. `COLUMNS.md` in this folder is the column dictionary.
 
 ---
 
-## Two steps to finish, by hand
+## Both tabs are in place
 
-The Google Sheets connector is not enabled in this session, only Drive, so the
-data tab was created but tabs cannot be added or renamed through the API. Both
-of these are quick.
+The Google Sheets connector is not enabled in this session, so this was done
+through Make instead: a one-off on-demand scenario calling the Sheets API,
+run once, then deleted. Nothing was left behind.
 
-### Step 1: rename the tab
-
-The tab is currently called **Untitled**. Rename it to **Projects**. The
-formulas below reference that name, and so will the Make modules.
-
-### Step 2: add a Checks tab
-
-New tab called **Checks**. Paste this into A1, then put the formulas in column B.
-
-| A | B |
+| What | State |
 |---|---|
-| Projects recorded | `=COUNTA(Projects!A2:A)` |
-| Rows where the total does not equal subtotal minus discount plus adjustment | `=SUMPRODUCT((Projects!$A$2:$A<>"")*(ABS(Projects!$S$2:$S-(Projects!$M$2:$M-Projects!$O$2:$O+Projects!$Q$2:$Q))>0.005))` |
-| Rows where the amount paid does not equal the total | `=SUMPRODUCT((Projects!$AD$2:$AD<>"")*(ABS(Projects!$AD$2:$AD-Projects!$S$2:$S)>0.005))` |
-| Awaiting approval | `=COUNTIF(Projects!$C$2:$C,"Awaiting approval")` |
-| Approved | `=COUNTIF(Projects!$C$2:$C,"Approved")` |
-| Quote sent | `=COUNTIF(Projects!$C$2:$C,"Quote sent")` |
-| Paid | `=COUNTIF(Projects!$C$2:$C,"Paid")` |
-| Awaiting information | `=COUNTIF(Projects!$C$2:$C,"Awaiting information")` |
-| In production | `=COUNTIF(Projects!$C$2:$C,"In production")` |
-| Ready for review | `=COUNTIF(Projects!$C$2:$C,"Ready for review")` |
-| Delivered | `=COUNTIF(Projects!$C$2:$C,"Delivered")` |
+| Tab renamed from Untitled to **Projects** | done |
+| Header row frozen and styled | done |
+| **Checks** tab added with live formulas | done |
 
-The first three rows are the ones that matter. Sandeep asked that the quote, the
-Stripe amount and the saved record always agree. Those two counts are how that
-gets checked rather than assumed, and both should read **0** at all times. Any
-other number means something wrote a figure it should not have.
+The sheet's own id was not 0 as a first attempt assumed. The real id,
+`1631417276`, was read back through the data store, because Make module
+outputs cannot be read through the API. The probe record was deleted
+afterwards.
+
+### What the Checks tab reads now
+
+| Check | Value |
+|---|---|
+| Projects recorded | 1 |
+| Rows where total does not equal subtotal minus discount plus adjustment | **0** |
+| Rows where amount paid does not equal total | **0** |
+| Awaiting approval | 1 |
+
+The two zeroes are the controls. Sandeep asked that the quote, the Stripe
+amount and the saved record always agree, and those two counts are how that is
+checked rather than assumed. Both must stay at zero. Any other number means
+something wrote a figure it should not have, and the row can be found by
+comparing columns M, O, Q, S and AD.
 
 The ranges are open ended, so they cover rows added later without editing.
+The follow-up queue is deliberately not here: the scheduled scenario owns the
+dates and the sending, and two implementations could disagree.
 
-Delete the example row once real projects are flowing. Both checks ignore it
-anyway, because its arithmetic is correct.
-
-**The follow-up queue is deliberately not in the sheet.** Working out which jobs
-are due a three or seven day email is done by the scheduled Make scenario, which
-owns the dates and the sending. Duplicating that as sheet formulas would give two
-answers that could disagree.
+Delete the example row once real projects are flowing. The checks ignore it,
+because its arithmetic is correct.
 
 ---
 
@@ -115,8 +110,8 @@ above reads a date.
 
 ## Before Sandeep sees it
 
-- The sheet is owned by **collsdigital@gmail.com**, so he needs sharing at
-  minimum, and ownership transferring at handover. Worth doing together with
-  the price list, which is in the same folder and has the same issue.
-- Rename the tab and add the Checks tab first, so the first thing he opens
-  reads properly.
+The sheet is owned by **collsdigital@gmail.com**, so he needs sharing at
+minimum, and ownership transferring at handover. Worth doing together with the
+price list, which sits in the same folder and has the same issue.
+
+Nothing else is outstanding on the sheet itself.
