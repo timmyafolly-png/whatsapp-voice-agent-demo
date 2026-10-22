@@ -178,14 +178,19 @@ because route 2's filter rejected the action, so no payment link could exist.
 | Wrong token | 3 | yes, `8e5b394da28647e1960c2f22a203c3e9` |
 | Approve | 7 | yes, `a790ebdc66634bbcacf1d2899a55811d` |
 | Request information | 6 | yes, `dd2a1897aa404f8d84ef86dce1f27cad` |
-| Duplicate approve, expiring the old link | 8 expected | not yet |
+| Duplicate approve, expiring the old link | 8 | yes, `2991e6027e3949aba985070779025146` |
 
 The operation count is the evidence in each case. It accounts for exactly the
 modules that should have run and leaves no room for one that should not have.
 
-Row 2 still carries the `stripe_session_id` from the approval, because
-requesting information does not clear it. So the next approve run exercises
-the expire route and the corrected money formatting in one go.
+All four paths are proven against live runs, each by its operation count.
+
+The eight-operation runs are the full chain with the expire call included:
+webhook, row lookup, variables, expire the previous session, create the new
+one, send the quotation, record it, respond. The seven-operation run skipped
+the expire because that row had no earlier session; these fired it because it
+did. Re-approving therefore replaces a customer's payment link rather than
+leaving two live links against one job, which is what the client asked for.
 
 ## Still to build
 
