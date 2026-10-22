@@ -166,6 +166,27 @@ curl -i "https://hook.eu1.make.com/u6k1ltrlcq5qs82upswhorlyujnkd531\
 Expect: the information-request email, no quotation, no Stripe session, status
 back to `Draft`, and a note on the row.
 
+**Result, 22 Oct 2026, 23:31 UTC: PASSED.** Execution
+`dd2a1897aa404f8d84ef86dce1f27cad`, SUCCESS, **6 operations**: webhook, row
+lookup, variables, email, row update, response. No Stripe module ran at all,
+because route 2's filter rejected the action, so no payment link could exist.
+
+## Where the four paths stand
+
+| Path | Operations | Proven |
+|---|---|---|
+| Wrong token | 3 | yes, `8e5b394da28647e1960c2f22a203c3e9` |
+| Approve | 7 | yes, `a790ebdc66634bbcacf1d2899a55811d` |
+| Request information | 6 | yes, `dd2a1897aa404f8d84ef86dce1f27cad` |
+| Duplicate approve, expiring the old link | 8 expected | not yet |
+
+The operation count is the evidence in each case. It accounts for exactly the
+modules that should have run and leaves no room for one that should not have.
+
+Row 2 still carries the `stripe_session_id` from the approval, because
+requesting information does not clear it. So the next approve run exercises
+the expire route and the corrected money formatting in one go.
+
 ## Still to build
 
 - **Phase 2a**, the form side: receives the prepared quote from the review
