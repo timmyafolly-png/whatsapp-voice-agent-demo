@@ -571,6 +571,14 @@
            ]
           },
           {
+           "range": "Projects!AI{{70.__ROW_NUMBER__}}",
+           "values": [
+            [
+             ""
+            ]
+           ]
+          },
+          {
            "range": "Projects!AP{{70.__ROW_NUMBER__}}",
            "values": [
             [

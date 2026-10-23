@@ -12,7 +12,7 @@
     "designer": {
      "x": 0,
      "y": 0,
-     "name": "1. Approval link tapped"
+     "name": "1. Approval link opened"
     },
     "restore": {
      "parameters": {
@@ -119,21 +119,18 @@
     {
      "flow": [
       {
-       "id": 20,
-       "module": "stripe:makeAnApiCall",
+       "id": 15,
+       "module": "gateway:WebhookRespond",
        "version": 1,
        "metadata": {
         "designer": {
          "x": 1200,
-         "y": -300,
-         "name": "5a. Expire the old payment link"
+         "y": -600,
+         "name": "5. Nothing left to do"
         }
        },
-       "parameters": {
-        "__IMTCONN__": 10506139
-       },
        "filter": {
-        "name": "Approving, and an old session exists",
+        "name": "Already sent this version, or already paid",
         "conditions": [
          [
           {
@@ -145,6 +142,147 @@
            "a": "{{1.action}}",
            "o": "text:equal",
            "b": "approve"
+          },
+          {
+           "a": "{{lower(trim(ifempty(1.confirm; \"\")))}}",
+           "o": "text:equal",
+           "b": "yes"
+          },
+          {
+           "a": "{{length(trim(ifempty(2.`34`; \"\")))}}",
+           "o": "number:greater",
+           "b": "0"
+          }
+         ],
+         [
+          {
+           "a": "{{1.token}}",
+           "o": "text:equal",
+           "b": "{{2.`32`}}"
+          },
+          {
+           "a": "{{lower(trim(ifempty(1.confirm; \"\")))}}",
+           "o": "text:equal",
+           "b": "yes"
+          },
+          {
+           "a": "{{2.`2`}}",
+           "o": "text:equal",
+           "b": "Paid"
+          }
+         ]
+        ]
+       },
+       "mapper": {
+        "status": "200",
+        "headers": [
+         {
+          "key": "Content-Type",
+          "value": "text/html; charset=utf-8"
+         }
+        ],
+        "body": "<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>BuildRegs</title></head><body style='margin:0; background:#F4F6F8; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;'><div style='max-width:420px; margin:48px auto; padding:32px 24px; background:#fff; border:1px solid #E3E8ED; border-radius:10px; text-align:center;'><h1 style='margin:0 0 12px; font-size:20px; color:#8A5A00;'>Nothing further to do</h1><p style='margin:0; font-size:15px; line-height:24px; color:#33414D;'>This quotation has already gone out and nothing has been changed. Revise it in the Quote Builder if the price or scope needs to move; that will replace the payment link.</p></div></body></html>"
+       }
+      }
+     ]
+    },
+    {
+     "flow": [
+      {
+       "id": 16,
+       "module": "gateway:WebhookRespond",
+       "version": 1,
+       "metadata": {
+        "designer": {
+         "x": 1200,
+         "y": -450,
+         "name": "5. Preview, nothing sent"
+        }
+       },
+       "filter": {
+        "name": "Link opened but not yet confirmed",
+        "conditions": [
+         [
+          {
+           "a": "{{1.token}}",
+           "o": "text:equal",
+           "b": "{{2.`32`}}"
+          },
+          {
+           "a": "{{lower(trim(ifempty(1.confirm; \"\")))}}",
+           "o": "text:notequal",
+           "b": "yes"
+          },
+          {
+           "a": "{{length(trim(ifempty(2.`34`; \"\")))}}",
+           "o": "number:equal",
+           "b": "0"
+          },
+          {
+           "a": "{{2.`2`}}",
+           "o": "text:notequal",
+           "b": "Paid"
+          }
+         ]
+        ]
+       },
+       "mapper": {
+        "status": "200",
+        "headers": [
+         {
+          "key": "Content-Type",
+          "value": "text/html; charset=utf-8"
+         }
+        ],
+        "body": "<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><title>BuildRegs</title></head><body style='margin:0; background:#F4F6F8; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;'><div style='max-width:460px; margin:40px auto; padding:28px 24px; background:#fff; border:1px solid #E3E8ED; border-radius:10px;'><h1 style='margin:0 0 6px; font-size:19px; color:#17324B;'>Check this before it goes</h1><p style='margin:0 0 18px; font-size:14px; line-height:21px; color:#33414D;'>{{if(1.action = \"approve\"; \"This will email the quotation and a payment link to the customer.\"; \"This will ask the customer for more detail. No quotation and no payment link will be sent.\")}}</p><table width='100%' cellpadding='0' cellspacing='0' border='0' style='background:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;'><tr><td style='padding:16px 18px;'><table width='100%' cellpadding='0' cellspacing='0' border='0'><tr><td style='padding:0 0 6px 0; font-size:13px; color:#6B7A88; width:120px;'>Reference</td><td style='padding:0 0 6px 0; font-size:14px; color:#33414D;'>{{2.`0`}}</td></tr><tr><td style='padding:0 0 6px 0; font-size:13px; color:#6B7A88; width:120px;'>Customer</td><td style='padding:0 0 6px 0; font-size:14px; color:#33414D;'>{{2.`5`}}</td></tr><tr><td style='padding:0 0 6px 0; font-size:13px; color:#6B7A88; width:120px;'>Goes to</td><td style='padding:0 0 6px 0; font-size:14px; color:#33414D;'>{{2.`6`}}</td></tr><tr><td style='padding:0 0 6px 0; font-size:13px; color:#6B7A88; width:120px;'>Property</td><td style='padding:0 0 6px 0; font-size:14px; color:#33414D;'>{{2.`8`}}</td></tr><tr><td style='padding:0 0 6px 0; font-size:13px; color:#6B7A88; width:120px;'>Work</td><td style='padding:0 0 6px 0; font-size:14px; color:#33414D;'>{{2.`10`}}</td></tr><tr><td style='padding:0 0 6px 0; font-size:14px; color:#6B7A88;'>Total payable</td><td style='padding:0 0 6px 0; font-size:18px; color:#17324B; font-weight:700;'>&pound;{{10.totalFmt}}</td></tr></table></td></tr></table><div style='text-align:center; margin-top:22px;'><a href='https://hook.eu1.make.com/u6k1ltrlcq5qs82upswhorlyujnkd531?ref={{2.`0`}}&token={{1.token}}&action={{1.action}}&confirm=yes' style='display:inline-block; padding:14px 28px; background:{{if(1.action = \"approve\"; \"#1E7A4B\"; \"#8A5A00\")}}; color:#fff; font-size:15px; font-weight:600; text-decoration:none; border-radius:6px;'>{{if(1.action = \"approve\"; \"Confirm and send the quotation\"; \"Confirm and request information\")}}</a></div><p style='margin:18px 0 0; font-size:12px; line-height:18px; color:#6B7A88; text-align:center;'>Nothing has been sent. Close this page and nothing will happen.</p></div></body></html>"
+       }
+      }
+     ]
+    },
+    {
+     "flow": [
+      {
+       "id": 20,
+       "module": "stripe:makeAnApiCall",
+       "version": 1,
+       "metadata": {
+        "designer": {
+         "x": 1200,
+         "y": -300,
+         "name": "6a. Expire the superseded payment link"
+        }
+       },
+       "parameters": {
+        "__IMTCONN__": 10506139
+       },
+       "filter": {
+        "name": "Confirmed revision with an unpaid link outstanding",
+        "conditions": [
+         [
+          {
+           "a": "{{1.token}}",
+           "o": "text:equal",
+           "b": "{{2.`32`}}"
+          },
+          {
+           "a": "{{1.action}}",
+           "o": "text:equal",
+           "b": "approve"
+          },
+          {
+           "a": "{{lower(trim(ifempty(1.confirm; \"\")))}}",
+           "o": "text:equal",
+           "b": "yes"
+          },
+          {
+           "a": "{{length(trim(ifempty(2.`34`; \"\")))}}",
+           "o": "number:equal",
+           "b": "0"
+          },
+          {
+           "a": "{{2.`2`}}",
+           "o": "text:notequal",
+           "b": "Paid"
           },
           {
            "a": "{{length(trim(ifempty(2.`27`; \"\")))}}",
@@ -189,14 +327,14 @@
         "designer": {
          "x": 1200,
          "y": 0,
-         "name": "5b. Create the payment link"
+         "name": "6b. Create the payment link"
         }
        },
        "parameters": {
         "__IMTCONN__": 10506139
        },
        "filter": {
-        "name": "Token matches and action is approve",
+        "name": "Confirmed approval of a version not yet sent",
         "conditions": [
          [
           {
@@ -208,6 +346,21 @@
            "a": "{{1.action}}",
            "o": "text:equal",
            "b": "approve"
+          },
+          {
+           "a": "{{lower(trim(ifempty(1.confirm; \"\")))}}",
+           "o": "text:equal",
+           "b": "yes"
+          },
+          {
+           "a": "{{length(trim(ifempty(2.`34`; \"\")))}}",
+           "o": "number:equal",
+           "b": "0"
+          },
+          {
+           "a": "{{2.`2`}}",
+           "o": "text:notequal",
+           "b": "Paid"
           }
          ]
         ]
@@ -233,7 +386,7 @@
         "designer": {
          "x": 1500,
          "y": 0,
-         "name": "6b. Send the quotation"
+         "name": "7b. Send the quotation"
         }
        },
        "parameters": {
@@ -267,7 +420,7 @@
         "designer": {
          "x": 1800,
          "y": 0,
-         "name": "7b. Record it on the project row"
+         "name": "8b. Record it on the project row"
         }
        },
        "parameters": {
@@ -333,7 +486,7 @@
         "designer": {
          "x": 2100,
          "y": 0,
-         "name": "8b. Confirm to Sandeep"
+         "name": "9b. Confirm to Sandeep"
         }
        },
        "mapper": {
@@ -359,7 +512,7 @@
         "designer": {
          "x": 1200,
          "y": 300,
-         "name": "5c. Ask for more information"
+         "name": "6c. Ask for more information"
         }
        },
        "parameters": {
@@ -367,7 +520,7 @@
         "saveAfterSent": false
        },
        "filter": {
-        "name": "Token matches and action is request information",
+        "name": "Confirmed request for information",
         "conditions": [
          [
           {
@@ -379,6 +532,16 @@
            "a": "{{1.action}}",
            "o": "text:equal",
            "b": "request_info"
+          },
+          {
+           "a": "{{lower(trim(ifempty(1.confirm; \"\")))}}",
+           "o": "text:equal",
+           "b": "yes"
+          },
+          {
+           "a": "{{2.`2`}}",
+           "o": "text:notequal",
+           "b": "Paid"
           }
          ]
         ]
@@ -394,7 +557,7 @@
         "replyTo": "support@buildregs.co.uk",
         "subject": "We need a little more information | BuildRegs",
         "contentType": "html",
-        "html": "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F4F6F8;\"><tr><td align=\"center\" style=\"padding:24px 12px;\"><table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:600px; max-width:100%; background-color:#FFFFFF; border:1px solid #E3E8ED; border-radius:8px;\"><tr><td align=\"left\" style=\"padding:28px 32px 20px 32px; border-bottom:1px solid #E3E8ED;\"><img src=\"https://buildregs.co.uk/wp-content/uploads/2025/11/BuildRegs-Black-1024x227.png\" alt=\"BuildRegs\" width=\"150\" style=\"display:block; width:150px; max-width:150px; height:auto; border:0;\"></td></tr><tr><td style=\"padding:32px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><h1 style=\"margin:0 0 16px 0; font-size:22px; line-height:30px; font-weight:600; color:#17324B;\">We need a little more information</h1><p style=\"margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;\">{{10.greeting}}</p><p style=\"margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;\">Thank you for your enquiry about your project at <strong>{{2.`8`}}</strong>. Before we can prepare your fixed-fee quotation, we need a little more detail about the work.</p><p style=\"margin:0 0 24px 0; font-size:15px; line-height:24px; color:#33414D;\">{{ifempty(1.message; \"Please reply to this email describing the work you are planning, and attach any drawings or supporting documents you already have.\")}}</p></td></tr><tr><td style=\"padding:0 32px;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;\"><tr><td style=\"padding:20px 24px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88; width:150px;\">Your reference</td><td style=\"padding:0 0 10px 0; font-size:15px; line-height:20px; color:#17324B; font-weight:600;\">{{2.`0`}}</td></tr><tr><td style=\"padding:0; font-size:13px; line-height:20px; color:#6B7A88;\">Property</td><td style=\"padding:0; font-size:15px; line-height:20px; color:#33414D;\">{{2.`8`}}</td></tr></table></td></tr></table></td></tr><tr><td style=\"padding:24px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><p style=\"margin:0 0 8px 0; font-size:15px; line-height:24px; color:#33414D;\">Just reply to this email and we will pick it up from there. As soon as we have what we need, we will send your quotation.</p></td></tr><tr><td style=\"padding:8px 32px 32px 32px; border-top:1px solid #E3E8ED; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><p style=\"margin:16px 0 0 0; font-size:15px; line-height:24px; color:#33414D;\">Kind regards,<br><strong style=\"color:#17324B;\">The BuildRegs Team</strong><br><span style=\"font-size:13px; line-height:20px; color:#6B7A88;\">Building Regulations Drawings &amp; Structural Calculations</span><br><a href=\"mailto:support@buildregs.co.uk\" style=\"font-size:13px; line-height:20px; color:#17324B;\">support@buildregs.co.uk</a><br><a href=\"https://www.buildregs.co.uk/\" style=\"font-size:13px; line-height:20px; color:#17324B;\">www.buildregs.co.uk</a></p></td></tr></table></td></tr></table>",
+        "html": "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F4F6F8;\">\n<tr><td align=\"center\" style=\"padding:24px 12px;\">\n<table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:600px; max-width:100%; background-color:#FFFFFF; border:1px solid #E3E8ED; border-radius:8px;\">\n<tr><td align=\"left\" style=\"padding:28px 32px 20px 32px; border-bottom:1px solid #E3E8ED;\">\n<img src=\"https://buildregs.co.uk/wp-content/uploads/2025/11/BuildRegs-Black-1024x227.png\" alt=\"BuildRegs\" width=\"150\" style=\"display:block; width:150px; max-width:150px; height:auto; border:0;\"></td></tr>\n<tr><td style=\"padding:32px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<h1 style=\"margin:0 0 16px 0; font-size:22px; line-height:30px; font-weight:600; color:#17324B;\">We need a little more information</h1>\n<p style=\"margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;\">{{10.greeting}}</p>\n<p style=\"margin:0 0 16px 0; font-size:15px; line-height:24px; color:#33414D;\">Thank you for your enquiry about your project at <strong>{{2.`8`}}</strong>. Before we can prepare your fixed-fee quotation, we need a little more detail about the work.</p>\n<p style=\"margin:0 0 24px 0; font-size:15px; line-height:24px; color:#33414D;\">{{ifempty(1.message; \"Please reply to this email describing the work you are planning, and attach any drawings or supporting documents you already have.\")}}</p></td></tr>\n<tr><td style=\"padding:0 32px;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color:#F7F9FB; border:1px solid #E3E8ED; border-radius:6px;\">\n<tr><td style=\"padding:20px 24px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\n<tr><td style=\"padding:0 0 10px 0; font-size:13px; line-height:20px; color:#6B7A88; width:150px;\">Your reference</td><td style=\"padding:0 0 10px 0; font-size:15px; line-height:20px; color:#17324B; font-weight:600;\">{{2.`0`}}</td></tr>\n<tr><td style=\"padding:0; font-size:13px; line-height:20px; color:#6B7A88;\">Property</td><td style=\"padding:0; font-size:15px; line-height:20px; color:#33414D;\">{{2.`8`}}</td></tr>\n</table></td></tr></table></td></tr>\n<tr><td style=\"padding:24px 32px 0 32px; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<p style=\"margin:0 0 8px 0; font-size:15px; line-height:24px; color:#33414D;\">Just reply to this email and we will pick it up from there. As soon as we have what we need, we will send your quotation.</p></td></tr>\n<tr><td style=\"padding:8px 32px 32px 32px; border-top:1px solid #E3E8ED; font-family:'Poppins','Segoe UI',Helvetica,Arial,sans-serif;\">\n<p style=\"margin:16px 0 0 0; font-size:15px; line-height:24px; color:#33414D;\">Kind regards,<br>\n<strong style=\"color:#17324B;\">The BuildRegs Team</strong><br>\n<span style=\"font-size:13px; line-height:20px; color:#6B7A88;\">Building Regulations Drawings &amp; Structural Calculations</span><br>\n<a href=\"mailto:support@buildregs.co.uk\" style=\"font-size:13px; line-height:20px; color:#17324B;\">support@buildregs.co.uk</a><br>\n<a href=\"https://www.buildregs.co.uk/\" style=\"font-size:13px; line-height:20px; color:#17324B;\">www.buildregs.co.uk</a></p></td></tr>\n</table></td></tr></table>",
         "priority": "normal",
         "headers": [],
         "attachments": [],
@@ -410,7 +573,7 @@
         "designer": {
          "x": 1500,
          "y": 300,
-         "name": "6c. Record it on the project row"
+         "name": "7c. Record it on the project row"
         }
        },
        "parameters": {
@@ -460,7 +623,7 @@
         "designer": {
          "x": 1800,
          "y": 300,
-         "name": "7c. Confirm to Sandeep"
+         "name": "8c. Confirm to Sandeep"
         }
        },
        "mapper": {

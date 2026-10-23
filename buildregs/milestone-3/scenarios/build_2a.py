@@ -99,10 +99,16 @@ VALUES = {
  41: '{{if(4.isSubmit = "yes"; "Prepared and sent for approval"; "Draft saved, not sent")}}',
 }
 ROW = [VALUES.get(i, "") for i in range(42)]
+# A revision clears the sent marker. Phase 2b treats an empty quote_sent_at as
+# "this version has not gone out yet".
+ROW[34] = ""
 # On an edit, created_at and the token are left alone so existing approval
 # links keep working, and columns 24 to 40 are never touched because they hold
-# payment and delivery data that belongs to later stages.
-EDIT_COLS = [2] + list(range(4, 24)) + [41]
+# payment and delivery data belonging to later stages. The one exception is
+# quote_sent_at: clearing it marks this as a new version, which is what lets
+# Phase 2b distinguish a deliberate revision (approve again, replacing the
+# unpaid payment link) from a repeat tap on the same version (do nothing).
+EDIT_COLS = [2] + list(range(4, 24)) + [34, 41]
 
 def a1(idx, row_expr):
     s, n = "", idx + 1

@@ -22,6 +22,16 @@ HOOK = 3957194          # BuildRegs Quote Approval
 HOOK_URL = "https://hook.eu1.make.com/u6k1ltrlcq5qs82upswhorlyujnkd531"
 SCENARIO_ID = 8118767
 
+INK, BODY, MUTED, LINE, PANEL, PAGE = "#17324B", "#33414D", "#6B7A88", "#E3E8ED", "#F7F9FB", "#F4F6F8"
+GREEN, AMBER = "#1E7A4B", "#8A5A00"
+
+
+def money(expr):
+    """Always pass separators. Without them formatNumber falls back to the
+    organisation locale, which here is European and renders 1248.5 as 1.248,50."""
+    return 'formatNumber(%s; 2; "."; ",")' % expr
+
+
 # Projects columns as filterRows 0-based indices
 C = {n: i for i, n in enumerate([
  "quote_reference","project_reference","status","created_at","updated_at",
@@ -174,11 +184,76 @@ _FIRST = 'trim(get(split(%s; " "); 1))' % col("customer_name").strip("{}")
 GREETING = ('{{if(length(ifempty(' + _FIRST + '; "")) > 0; "Hi " + '
             + _FIRST + ' + ","; "Hello,")}}')
 
-TOKEN_OK = [{"a": "{{1.token}}", "o": "text:equal", "b": col("approval_token")}]
+# ---------------------------------------------------------------- conditions
+# A link in an email is opened by mail providers and security scanners as a
+# matter of course, so opening one must never act. Everything that sends is
+# gated on confirm=yes, which only the button on the preview page supplies.
+TOKEN_OK      = {"a": "{{1.token}}", "o": "text:equal", "b": col("approval_token")}
+IS_APPROVE    = {"a": "{{1.action}}", "o": "text:equal", "b": "approve"}
+IS_INFO       = {"a": "{{1.action}}", "o": "text:equal", "b": "request_info"}
+CONFIRMED     = {"a": '{{lower(trim(ifempty(1.confirm; "")))}}', "o": "text:equal", "b": "yes"}
+NOT_CONFIRMED = {"a": '{{lower(trim(ifempty(1.confirm; "")))}}', "o": "text:notequal", "b": "yes"}
+# quote_sent_at is the version marker. A revision through Phase 2a clears it,
+# so a second approval of the same version finds it set and does nothing.
+NOT_SENT      = {"a": '{{length(trim(ifempty(%s; "")))}}' % col("quote_sent_at").strip("{}"),
+                 "o": "number:equal", "b": "0"}
+ALREADY_SENT  = {"a": '{{length(trim(ifempty(%s; "")))}}' % col("quote_sent_at").strip("{}"),
+                 "o": "number:greater", "b": "0"}
+NOT_PAID      = {"a": col("status"), "o": "text:notequal", "b": "Paid"}
+IS_PAID       = {"a": col("status"), "o": "text:equal", "b": "Paid"}
+HAS_SESSION   = {"a": '{{length(trim(ifempty(%s; "")))}}' % col("stripe_session_id").strip("{}"),
+                 "o": "number:greater", "b": "0"}
+
+SELF = "https://hook.eu1.make.com/u6k1ltrlcq5qs82upswhorlyujnkd531"
+CONFIRM_LINK = (SELF + "?ref=" + col("quote_reference") + "&token={{1.token}}"
+                "&action={{1.action}}&confirm=yes")
+
+
+def preview_page():
+    """Shown when the link is opened. Sends nothing."""
+    fee = ("<tr><td style='padding:0 0 6px 0; font-size:14px; color:%s;'>Total payable</td>"
+           "<td style='padding:0 0 6px 0; font-size:18px; color:%s; font-weight:700;'>"
+           "&pound;{{10.totalFmt}}</td></tr>" % (MUTED, INK))
+    rows = "".join(
+        "<tr><td style='padding:0 0 6px 0; font-size:13px; color:%s; width:120px;'>%s</td>"
+        "<td style='padding:0 0 6px 0; font-size:14px; color:%s;'>%s</td></tr>" % (MUTED, k, BODY, v)
+        for k, v in [("Reference", col("quote_reference")),
+                     ("Customer", col("customer_name")),
+                     ("Goes to", col("customer_email")),
+                     ("Property", col("property_address")),
+                     ("Work", col("project_types"))])
+    what = ('{{if(1.action = "approve"; '
+            '"This will email the quotation and a payment link to the customer."; '
+            '"This will ask the customer for more detail. No quotation and no payment '
+            'link will be sent.")}}')
+    label = '{{if(1.action = "approve"; "Confirm and send the quotation"; "Confirm and request information")}}'
+    tone = '{{if(1.action = "approve"; "%s"; "%s")}}' % (GREEN, AMBER)
+    return ("<!doctype html><html><head><meta charset='utf-8'>"
+            "<meta name='viewport' content='width=device-width, initial-scale=1'>"
+            "<title>BuildRegs</title></head><body style='margin:0; background:%s; "
+            "font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;'>"
+            "<div style='max-width:460px; margin:40px auto; padding:28px 24px; background:#fff; "
+            "border:1px solid %s; border-radius:10px;'>"
+            "<h1 style='margin:0 0 6px; font-size:19px; color:%s;'>Check this before it goes</h1>"
+            "<p style='margin:0 0 18px; font-size:14px; line-height:21px; color:%s;'>%s</p>"
+            "<table width='100%%' cellpadding='0' cellspacing='0' border='0' "
+            "style='background:%s; border:1px solid %s; border-radius:6px;'>"
+            "<tr><td style='padding:16px 18px;'><table width='100%%' cellpadding='0' "
+            "cellspacing='0' border='0'>%s%s</table></td></tr></table>"
+            "<div style='text-align:center; margin-top:22px;'>"
+            "<a href='%s' style='display:inline-block; padding:14px 28px; background:%s; "
+            "color:#fff; font-size:15px; font-weight:600; text-decoration:none; "
+            "border-radius:6px;'>%s</a></div>"
+            "<p style='margin:18px 0 0; font-size:12px; line-height:18px; color:%s; "
+            "text-align:center;'>Nothing has been sent. Close this page and nothing "
+            "will happen.</p></div></body></html>"
+            % (PAGE, LINE, INK, BODY, what, PANEL, LINE, rows, fee,
+               CONFIRM_LINK, tone, label, MUTED))
+
 
 flow = [
  {"id": 1, "module": "gateway:CustomWebHook", "version": 1,
-  "metadata": {"designer": {"x": 0, "y": 0, "name": "1. Approval link tapped"},
+  "metadata": {"designer": {"x": 0, "y": 0, "name": "1. Approval link opened"},
                "restore": {"parameters": {"hook": {"label": "BuildRegs Quote Approval",
                                                    "data": {"editable": "true"}}}}},
   "parameters": {"hook": HOOK, "maxResults": 1}, "mapper": {}},
@@ -197,30 +272,48 @@ flow = [
   "metadata": {"designer": {"x": 600, "y": 0, "name": "3. Build the fields"}},
   "mapper": {"scope": "roundtrip", "variables": [
     {"name": "greeting", "value": GREETING},
-    {"name": "totalFmt", "value": '{{formatNumber(parseNumber(%s); 2; "."; ",")}}' % col("total").strip("{}")},
+    {"name": "totalFmt", "value": "{{%s}}" % money("parseNumber(%s)" % col("total").strip("{}"))},
     {"name": "totalPence", "value": "{{round(parseNumber(%s) * 100)}}" % col("total").strip("{}")},
-    {"name": "packageName",
-     "value": '{{ifempty(%s; "BuildRegs package")}}' % col("package").strip("{}")},
+    {"name": "packageName", "value": '{{ifempty(%s; "BuildRegs package")}}' % col("package").strip("{}")},
     {"name": "stamp", "value": STAMP}]}},
 
  {"id": 50, "module": "builtin:BasicRouter", "version": 1,
   "metadata": {"designer": {"x": 900, "y": 0, "name": "4. Router"}},
   "mapper": {}, "routes": [
 
-   # ---- route 1: kill any previous unpaid payment link
+   # ---- already handled: a second approval of the same version, or a paid job
+   {"flow": [
+     {"id": 15, "module": "gateway:WebhookRespond", "version": 1,
+      "metadata": {"designer": {"x": 1200, "y": -600, "name": "5. Nothing left to do"}},
+      "filter": {"name": "Already sent this version, or already paid",
+                 "conditions": [[TOKEN_OK, IS_APPROVE, CONFIRMED, ALREADY_SENT],
+                                [TOKEN_OK, CONFIRMED, IS_PAID]]},
+      "mapper": {"status": "200",
+                 "headers": [{"key": "Content-Type", "value": "text/html; charset=utf-8"}],
+                 "body": page("Nothing further to do",
+                              "This quotation has already gone out and nothing has been "
+                              "changed. Revise it in the Quote Builder if the price or "
+                              "scope needs to move; that will replace the payment link.",
+                              AMBER)}}]},
+
+   # ---- the preview. Opening the link lands here and sends nothing.
+   {"flow": [
+     {"id": 16, "module": "gateway:WebhookRespond", "version": 1,
+      "metadata": {"designer": {"x": 1200, "y": -450, "name": "5. Preview, nothing sent"}},
+      "filter": {"name": "Link opened but not yet confirmed",
+                 "conditions": [[TOKEN_OK, NOT_CONFIRMED, NOT_SENT, NOT_PAID]]},
+      "mapper": {"status": "200",
+                 "headers": [{"key": "Content-Type", "value": "text/html; charset=utf-8"}],
+                 "body": preview_page()}}]},
+
+   # ---- a genuine revision replaces the previous unpaid link
    {"flow": [
      {"id": 20, "module": "stripe:makeAnApiCall", "version": 1,
       "metadata": {"designer": {"x": 1200, "y": -300,
-                                "name": "5a. Expire the old payment link"}},
+                                "name": "6a. Expire the superseded payment link"}},
       "parameters": {"__IMTCONN__": CONN_STRIPE},
-      "filter": {"name": "Approving, and an old session exists",
-                 "conditions": [TOKEN_OK
-                                + [{"a": "{{1.action}}", "o": "text:equal", "b": "approve"},
-                                   # NOT "exist": in Make an empty string exists, so a
-                                   # blank session id would send the expire call to
-                                   # /v1/checkout/sessions//expire with no id in the path.
-                                   {"a": "{{length(trim(ifempty(%s; \"\")))}}" % col("stripe_session_id").strip("{}"),
-                                    "o": "number:greater", "b": "0"}]]},
+      "filter": {"name": "Confirmed revision with an unpaid link outstanding",
+                 "conditions": [[TOKEN_OK, IS_APPROVE, CONFIRMED, NOT_SENT, NOT_PAID, HAS_SESSION]]},
       "mapper": {"url": "/v1/checkout/sessions/%s/expire" % col("stripe_session_id"),
                  "method": "POST", "headers": [], "qs": [], "body": ""},
       "onerror": [{"id": 29, "module": "builtin:Resume", "version": 1,
@@ -228,14 +321,13 @@ flow = [
                                              "name": "Already expired or paid, carry on"}},
                    "mapper": {}}]}]},
 
-   # ---- route 2: approve, then and only then create the link and send
+   # ---- confirmed approval
    {"flow": [
      {"id": 21, "module": "stripe:makeAnApiCall", "version": 1,
-      "metadata": {"designer": {"x": 1200, "y": 0, "name": "5b. Create the payment link"}},
+      "metadata": {"designer": {"x": 1200, "y": 0, "name": "6b. Create the payment link"}},
       "parameters": {"__IMTCONN__": CONN_STRIPE},
-      "filter": {"name": "Token matches and action is approve",
-                 "conditions": [TOKEN_OK
-                                + [{"a": "{{1.action}}", "o": "text:equal", "b": "approve"}]]},
+      "filter": {"name": "Confirmed approval of a version not yet sent",
+                 "conditions": [[TOKEN_OK, IS_APPROVE, CONFIRMED, NOT_SENT, NOT_PAID]]},
       "mapper": {"url": "/v1/checkout/sessions", "method": "POST",
                  "headers": [{"key": "Content-Type",
                               "value": "application/x-www-form-urlencoded"}],
@@ -264,7 +356,7 @@ flow = [
                  ])}},
 
      {"id": 22, "module": "email:ActionSendEmail", "version": 6,
-      "metadata": {"designer": {"x": 1500, "y": 0, "name": "6b. Send the quotation"}},
+      "metadata": {"designer": {"x": 1500, "y": 0, "name": "7b. Send the quotation"}},
       "parameters": {"account": CONN_MAIL, "saveAfterSent": False},
       "mapper": {"to": [col("customer_email")], "cc": [], "bcc": [],
                  "from": FROM_LINE, "sender": "", "replyTo": "support@buildregs.co.uk",
@@ -274,7 +366,7 @@ flow = [
                  "inReplyTo": "", "references": []}},
 
      {"id": 23, "module": "google-sheets:makeAPICall", "version": 2,
-      "metadata": {"designer": {"x": 1800, "y": 0, "name": "7b. Record it on the project row"}},
+      "metadata": {"designer": {"x": 1800, "y": 0, "name": "8b. Record it on the project row"}},
       "parameters": {"__IMTCONN__": CONN_SHEETS},
       "mapper": {"url": "spreadsheets/%s/values:batchUpdate" % SHEET,
                  "method": "POST", "headers": [], "qs": [],
@@ -286,33 +378,31 @@ flow = [
                    {"range": a1("stripe_session_id", ROW), "values": [["{{21.body.id}}"]]}]}}},
 
      {"id": 24, "module": "gateway:WebhookRespond", "version": 1,
-      "metadata": {"designer": {"x": 2100, "y": 0, "name": "8b. Confirm to Sandeep"}},
+      "metadata": {"designer": {"x": 2100, "y": 0, "name": "9b. Confirm to Sandeep"}},
       "mapper": {"status": "200",
                  "headers": [{"key": "Content-Type", "value": "text/html; charset=utf-8"}],
                  "body": page("Quotation approved and sent",
                               "The quotation for " + col("quote_reference")
                               + " has gone to the customer with a payment link. "
                                 "The India team has not been notified; that happens "
-                                "only once payment is confirmed.")}}]},
+                                "only once payment is confirmed.", GREEN)}}]},
 
-   # ---- route 3: ask the customer for more information, no quote, no link
+   # ---- confirmed request for information
    {"flow": [
      {"id": 30, "module": "email:ActionSendEmail", "version": 6,
-      "metadata": {"designer": {"x": 1200, "y": 300, "name": "5c. Ask for more information"}},
+      "metadata": {"designer": {"x": 1200, "y": 300, "name": "6c. Ask for more information"}},
       "parameters": {"account": CONN_MAIL, "saveAfterSent": False},
-      "filter": {"name": "Token matches and action is request information",
-                 "conditions": [TOKEN_OK
-                                + [{"a": "{{1.action}}", "o": "text:equal",
-                                    "b": "request_info"}]]},
+      "filter": {"name": "Confirmed request for information",
+                 "conditions": [[TOKEN_OK, IS_INFO, CONFIRMED, NOT_PAID]]},
       "mapper": {"to": [col("customer_email")], "cc": [], "bcc": [],
                  "from": FROM_LINE, "sender": "", "replyTo": "support@buildregs.co.uk",
                  "subject": "We need a little more information | BuildRegs",
-                 "contentType": "html", "html": minify(INFO_HTML),
+                 "contentType": "html", "html": INFO_HTML,
                  "priority": "normal", "headers": [], "attachments": [],
                  "inReplyTo": "", "references": []}},
 
      {"id": 31, "module": "google-sheets:makeAPICall", "version": 2,
-      "metadata": {"designer": {"x": 1500, "y": 300, "name": "6c. Record it on the project row"}},
+      "metadata": {"designer": {"x": 1500, "y": 300, "name": "7c. Record it on the project row"}},
       "parameters": {"__IMTCONN__": CONN_SHEETS},
       "mapper": {"url": "spreadsheets/%s/values:batchUpdate" % SHEET,
                  "method": "POST", "headers": [], "qs": [],
@@ -323,7 +413,7 @@ flow = [
                     "values": [["Information requested from the customer on {{10.stamp}}"]]}]}}},
 
      {"id": 32, "module": "gateway:WebhookRespond", "version": 1,
-      "metadata": {"designer": {"x": 1800, "y": 300, "name": "7c. Confirm to Sandeep"}},
+      "metadata": {"designer": {"x": 1800, "y": 300, "name": "8c. Confirm to Sandeep"}},
       "mapper": {"status": "200",
                  "headers": [{"key": "Content-Type", "value": "text/html; charset=utf-8"}],
                  "body": page("Information requested",
@@ -331,7 +421,7 @@ flow = [
                               + col("quote_reference")
                               + ". No quotation and no payment link were sent. The "
                                 "draft is saved and waiting for you.",
-                              "#8A5A00")}}]}]}]
+                              AMBER)}}]}]}]
 
 bp = {"name": "BuildRegs Phase 2b - Quote approval (approve or request info)",
       "metadata": {"version": 1}, "flow": flow}
