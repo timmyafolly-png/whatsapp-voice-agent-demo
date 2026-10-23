@@ -60,10 +60,14 @@ m3 = [
 
 m4 = [
  # 50% off the single lowest-priced type, once, and only with two or more of
+ # them. Two conditions are nested ifs, not `and`: Make has no and() function,
+ # and infix `and` does not error, it mis-parses and evaluates only the right
+ # comparison, which discounted a single-type quote. Phase 2's review rule
+ # nests ifs for the same reason.
  # them. An override from the review page replaces it, zero included.
  {"name": "discount", "value":
     '{{if(%s > 0; parseNumber(1.discount_override); '
-    'if(3.typeCount >= 2 and 3.minPrice < 9000000000; 3.minPrice / 2; 0))}}' % HAS("discount_override")},
+    'if(3.typeCount >= 2; if(3.minPrice < 9000000000; 3.minPrice / 2; 0); 0))}}' % HAS("discount_override")},
  {"name": "discountLabel", "value":
     '{{if(%s > 0; "Discount (overridden)"; "Combined project discount")}}' % HAS("discount_override")},
  {"name": "overridden", "value": '{{if(%s > 0; "yes"; "no")}}' % HAS("discount_override")},

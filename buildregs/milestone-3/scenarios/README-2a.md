@@ -8,7 +8,7 @@ never the JSON.
 | Scenario | `8127672` |
 | Hook | `3960316` |
 | Webhook URL | `https://hook.eu1.make.com/ic5pbkhzsx981i9q6syysrwj48dmjywk` |
-| State | active, valid, **not yet tested** |
+| State | active, valid, **submit and save both proven** |
 
 ---
 
@@ -113,3 +113,56 @@ client asked specifically that saving must never send.
 Then take the `quote_reference` from the new row and post again with it
 included, to confirm an edit updates the row in place rather than adding a
 second one.
+
+---
+
+## Test results, 23 Oct 2026
+
+Driven from a throwaway Make scenario, because the build container's proxy
+blocks `hook.eu1.make.com`.
+
+| Case | Operations | Result |
+|---|---|---|
+| `action=submit`, two project types | 9 | row written, approval email sent |
+| `action=save`, one project type | 8 | row written, **no email** |
+
+The difference of exactly one operation is the email module not running on a
+save. That is the proof the client asked for: saving cannot send.
+
+| | Types | Subtotal | Discount | Total | Status |
+|---|---|---|---|---|---|
+| Submit | 2 | 1648 | 399.50 | 1248.50 | Awaiting approval |
+| Save | 1 | 249 | 0 | 369 | Draft |
+
+Half of 799, the lower of the two prices, on the first. No combined discount
+on the single type, and 249 plus a 120 adjustment on the second.
+
+### The bug the save case caught
+
+The first run discounted the single-type quote by 124.50. The condition was
+
+```
+if(3.typeCount >= 2 and 3.minPrice < 9000000000; ...)
+```
+
+**Make has no `and` function, and infix `and` does not raise an error: it
+mis-parses.** It evaluated only the right-hand comparison, which is always
+true, so every quote got the discount. The two-type case hid it, because
+there the answer was right anyway.
+
+Replacing `and` with `and(...)` proved the first half, failing loudly with
+`Function 'and' not found!`. Two conditions have to be **nested ifs**, which
+is what Phase 2's own review rule does:
+
+```
+if(3.typeCount >= 2; if(3.minPrice < 9000000000; 3.minPrice / 2; 0); 0)
+```
+
+**Never use `and` or `or` inside a Make expression.** Nest the ifs.
+
+### Known cosmetic point
+
+`discount_label` still reads "Combined project discount" on a row whose
+discount is zero. Nothing renders it in that case, since the email only draws
+the line when the discount is above zero, so it is a label on an unused
+column rather than a defect.

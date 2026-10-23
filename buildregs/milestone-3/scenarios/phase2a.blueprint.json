@@ -149,7 +149,7 @@
     "variables": [
      {
       "name": "discount",
-      "value": "{{if(length(trim(ifempty(1.discount_override; \"\"))) > 0; parseNumber(1.discount_override); if(3.typeCount >= 2 and 3.minPrice < 9000000000; 3.minPrice / 2; 0))}}"
+      "value": "{{if(length(trim(ifempty(1.discount_override; \"\"))) > 0; parseNumber(1.discount_override); if(3.typeCount >= 2; if(3.minPrice < 9000000000; 3.minPrice / 2; 0); 0))}}"
      },
      {
       "name": "discountLabel",
