@@ -209,3 +209,60 @@ leaving two live links against one job, which is what the client asked for.
 - A bad token or unknown reference gives the browser a generic error rather
   than a friendly page, because the lookup halts before any response module.
   It fails closed, which is the important half.
+
+---
+
+## Re-test after the preview-then-confirm rework (23 October, evening)
+
+Both scenarios were redeployed from the generated blueprints and re-tested end to
+end. The container's proxy blocks `hook.eu1.make.com`, so the webhooks were driven
+from two disposable Make scenarios: **8146483** `ZZ TEST - webhook driver (delete
+me)` (one `http:ActionSendData` whose URL and body are edited per test) and
+**8146496** `ZZ TEST - sheet write (delete me)` (finds the test row by reference
+and patches it). Both are deactivated now; delete them once the results have been
+reviewed.
+
+Module outputs are still unreadable through the API (`executions_get-detail`
+returns only `{"status": "SUCCESS"}`), so the evidence is the operation count of
+each run. Each route's operation cost is fixed and distinct, which makes the count
+a reliable statement of which route fired.
+
+Test row: `BR-Q-ZZTEST-01`, token `zz20261023testtoken`, customer
+`collsdigital@gmail.com`, two project types at £799 and £899, so a £399.50
+combined-project discount and £1,298.50 payable.
+
+| # | What was done | Expected | Ops | Result |
+|---|---|---|---|---|
+| 1 | Phase 2a, `action=submit`, new project | append + approval email + respond | 9 | pass |
+| 2 | Phase 2b, `action=approve`, no `confirm` | preview page only, nothing sent | 4 | pass |
+| 3 | Phase 2b, `action=approve&confirm=yes` | Stripe session + quotation + sheet write | 7 | pass |
+| 4 | Phase 2b, the same confirmed link again | "nothing further to do", no re-send | 4 | pass |
+| 5a | Phase 2a edit, `quote_reference` supplied | update in place, clears the sent marker | 10 | pass |
+| 5b | Phase 2b, approve the revision with `confirm` | old link expired + new link + quotation | 8 | pass |
+| 6 | Phase 2b on a row set to `Paid` (sent marker cleared) | refused on the Paid rule alone | 4 | pass |
+| 7a | Phase 2b, `action=request_info`, no `confirm` | preview page only | 4 | pass |
+| 7b | Phase 2b, `request_info&confirm=yes` | information email + sheet write, no Stripe | 6 | pass |
+| 8 | Phase 2b with a wrong token | no route fires at all | 3 | pass |
+
+Operation arithmetic, for reading the table: every run costs 3 before the router
+(webhook, `filterRows`, `SetVariables`), the router itself is free, then route 1
+or 2 adds 1 (a single `WebhookRespond`), route 4 adds 4 (Stripe, email, sheet,
+respond), route 3 adds 1 on top of route 4 when a superseded session has to be
+expired, and route 5 adds 3 (email, sheet, respond). Test 8's 3 operations are
+therefore the proof that a bad token reaches no route.
+
+### One behaviour changed during the re-test
+
+Route 1 originally required `confirm=yes`, which left a gap: opening an
+already-sent or already-paid link *without* confirming matched no route at all and
+returned a bare "Accepted" instead of a page. Route 1 no longer looks at
+`confirm`, so those opens get the explanatory page. The routes stay mutually
+exclusive because route 1's approve group requires a non-empty sent marker while
+routes 2, 3 and 4 all require an empty one, and its paid group is the only route
+that does not require `status != Paid`.
+
+### Still to do on these two scenarios
+
+Nothing. The test row and the row created by test 1 are left in the Projects
+sheet, per the standing agreement to leave test records in place until they have
+been reviewed with Sandeep.

@@ -144,11 +144,6 @@
            "b": "approve"
           },
           {
-           "a": "{{lower(trim(ifempty(1.confirm; \"\")))}}",
-           "o": "text:equal",
-           "b": "yes"
-          },
-          {
            "a": "{{length(trim(ifempty(2.`34`; \"\")))}}",
            "o": "number:greater",
            "b": "0"
@@ -159,11 +154,6 @@
            "a": "{{1.token}}",
            "o": "text:equal",
            "b": "{{2.`32`}}"
-          },
-          {
-           "a": "{{lower(trim(ifempty(1.confirm; \"\")))}}",
-           "o": "text:equal",
-           "b": "yes"
           },
           {
            "a": "{{2.`2`}}",
